@@ -1,16 +1,12 @@
 from io import BytesIO
 from pathlib import Path
-from base64 import b64encode
-from typing import Type, Iterable, List, Union, TYPE_CHECKING
 from typing_extensions import override
-
-from nonebot import get_bot
+from typing import TYPE_CHECKING, List, Type, Union, Iterable
 
 from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
-from .model import Element, TextElement, PicElement
-
+from .model import Element
 
 
 class MessageSegment(BaseMessageSegment["Message"]):
@@ -62,6 +58,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
     def ark(data: str) -> "MessageSegment":
         return MessageSegment("ark", {"data": data})
 
+
 class Message(BaseMessage[MessageSegment]):
     @classmethod
     @override
@@ -72,7 +69,6 @@ class Message(BaseMessage[MessageSegment]):
     @staticmethod
     @override
     def _construct(msg: str) -> Iterable[MessageSegment]:
-        # 实现从字符串中构造消息数组，如无字符串嵌入格式可直接返回文本类型 MessageSegment
         yield MessageSegment.text(msg)
 
     @classmethod
@@ -104,7 +100,7 @@ class Message(BaseMessage[MessageSegment]):
                             "path": pic.sourcePath,
                             "width": pic.picWidth,
                             "height": pic.picHeight,
-                        }
+                        },
                     )
                 )
             if element.elementId == 6:
@@ -116,13 +112,15 @@ class Message(BaseMessage[MessageSegment]):
                 if TYPE_CHECKING:
                     assert element.replyElement
                 reply = element.replyElement
-                msg.append(MessageSegment(
-                    "reply",
-                    {
-                        "msg_id": reply["sourceMsgIdInRecords"],
-                        "msg_seq": reply["replayMsgSeq"]
-                    }
-                ))
+                msg.append(
+                    MessageSegment(
+                        "reply",
+                        {
+                            "msg_id": reply["sourceMsgIdInRecords"],
+                            "msg_seq": reply["replayMsgSeq"],
+                        },
+                    )
+                )
             if element.elementId == 10:
                 if TYPE_CHECKING:
                     assert element.arkElement
@@ -134,9 +132,16 @@ class Message(BaseMessage[MessageSegment]):
         res = []
         for seg in self:
             if seg.type == "text":
-                res.append({"elementType": 1, "textElement": {"content": seg.data['text']}})
+                res.append(
+                    {"elementType": 1, "textElement": {"content": seg.data["text"]}}
+                )
             elif seg.type == "at":
-                res.append({"elementType": 1, "textElement": {"atType": 2, "atNtUin": seg.data['user_id']}})
+                res.append(
+                    {
+                        "elementType": 1,
+                        "textElement": {"atType": 2, "atNtUin": seg.data["user_id"]},
+                    }
+                )
             elif seg.type == "at_all":
                 res.append({"elementType": 1, "textElement": {"atType": 1}})
             elif seg.type == "image":
@@ -167,15 +172,20 @@ class Message(BaseMessage[MessageSegment]):
                 # }
                 ...
             elif seg.type == "face":
-                res.append({"elementType": 6, "faceElement": {"faceIndex": seg.data["face_id"]}})
+                res.append(
+                    {
+                        "elementType": 6,
+                        "faceElement": {"faceIndex": seg.data["face_id"]},
+                    }
+                )
             elif seg.type == "reply":
                 res.append(
                     {
                         "elementType": 7,
                         "replyElement": {
                             "sourceMsgIdInRecords": seg.data["msg_id"],
-                            "replayMsgSeq": seg.data["msg_seq"]
-                        }
+                            "replayMsgSeq": seg.data["msg_seq"],
+                        },
                     }
                 )
         return res

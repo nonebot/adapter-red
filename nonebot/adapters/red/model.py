@@ -1,4 +1,5 @@
-from typing import Any, List, Union, Optional
+from typing import Any, List, Optional
+
 from pydantic import BaseModel
 
 
@@ -84,7 +85,7 @@ class Element(BaseModel):
     elementId: Optional[str]
     extBufForUI: Optional[str]
     picElement: Optional[PicElement]
-    textElement:Optional[TextElement]
+    textElement: Optional[TextElement]
     arkElement: Optional[dict]
     avRecordElement: Optional[dict]
     calendarElement: Optional[dict]

@@ -1,20 +1,21 @@
-import asyncio
 import json
-import websockets
-from typing import Any, Optional, Dict, Callable
-from typing_extensions import override
+import asyncio
+from typing import Any, Dict, Optional
 
-from nonebot.drivers import Driver, Request, ForwardDriver
-from nonebot.adapters import Adapter as BaseAdapter
-from nonebot.adapters import Event as BaseEvent
-from nonebot.exception import WebSocketClosed
+import websockets
 from nonebot.typing import override
 from nonebot.utils import escape_tag
+from nonebot.exception import WebSocketClosed
+from nonebot.drivers import Driver, Request, ForwardDriver
+
+from nonebot.adapters import Event as BaseEvent
+from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
 from .config import Config
-from .event import Event, GroupMessageEvent, PrivateMessageEvent
 from .utils import log, handle_data
+from .event import Event, GroupMessageEvent, PrivateMessageEvent
+
 
 class Adapter(BaseAdapter):
     @override
@@ -30,12 +31,13 @@ class Adapter(BaseAdapter):
     def get_name(cls) -> str:
         """适配器名称"""
         return "RedProtocol"
-    
+
     def setup(self) -> None:
         if not isinstance(self.driver, ForwardDriver):
             # 判断用户配置的Driver类型是否符合适配器要求，不符合时应抛出异常
             raise RuntimeError(
-                f"Current driver {self.config.driver} doesn't support forward connections!"
+                f"Current driver {self.config.driver} "
+                f"doesn't support forward connections!"
                 f"{self.get_name()} Adapter need a ForwardDriver to work."
             )
         # 在 NoneBot 启动和关闭时进行相关操作
@@ -59,14 +61,12 @@ class Adapter(BaseAdapter):
                 )
                 connect_packet = {
                     "type": "meta::connect",
-                    "payload": {
-                        "token": self.platform_config.token
-                    }
+                    "payload": {"token": self.platform_config.token},
                 }
                 await ws.send(json.dumps(connect_packet))
                 connect_data = json.loads(await ws.recv())
 
-                self_id = connect_data['payload']['authData']['uin']
+                self_id = connect_data["payload"]["authData"]["uin"]
                 bot = Bot(self, self_id)
                 self.bot_connect(bot)
 
@@ -82,8 +82,7 @@ class Adapter(BaseAdapter):
                             except IndexError:
                                 log(
                                     "WARNING",
-                                    "Failed to get message payload. \n"
-                                    f"{data}"
+                                    "Failed to get message payload. \n" f"{data}",
                                 )
                             else:
                                 asyncio.create_task(bot.handle_event(event))
@@ -123,7 +122,7 @@ class Adapter(BaseAdapter):
     def parse_obj(cls, obj: dict):
         chat_type_parser = {
             1: PrivateMessageEvent.parse_obj,
-            2: GroupMessageEvent.parse_obj
+            2: GroupMessageEvent.parse_obj,
         }
 
         try:
@@ -140,7 +139,6 @@ class Adapter(BaseAdapter):
 
         Event 模型继承自 pydantic.BaseModel，具体请参考 pydantic 文档
         """
-
 
         # 做一层异常处理，以应对平台事件数据的变更
         try:
@@ -160,10 +158,11 @@ class Adapter(BaseAdapter):
         request = Request(
             method=method,  # 请求方法
             url=f"http://localhost:{self.platform_config.port}/api/{api}",  # 接口地址
-            headers={'Authorization': f'Bearer {self.platform_config.token}'},  # 请求头，通常需要包含鉴权信息
+            headers={
+                "Authorization": f"Bearer {self.platform_config.token}"
+            },  # 请求头，通常需要包含鉴权信息
             content=json.dumps(platform_data),
             data=data,
         )
         # 发送请求，返回结果
         return await self.request(request)
-    
