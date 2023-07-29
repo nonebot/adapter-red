@@ -151,7 +151,7 @@ class Adapter(BaseAdapter):
             # 也可以尝试转为基础 Event 进行处理
             return BaseEvent.parse_obj(payload)
 
-    @override(BaseAdapter)
+    @override
     async def _call_api(self, bot: Bot, api: str, **data: Any) -> Any:
         log("DEBUG", f"Calling API <y>{api}</y>")  # 给予日志提示
         method, platform_data = handle_data(api, **data)
