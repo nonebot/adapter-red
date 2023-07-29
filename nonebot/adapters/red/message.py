@@ -1,128 +1,191 @@
 from io import BytesIO
 from pathlib import Path
-from base64 import b64encode
-from typing import Type, Iterable, List, Union
 from typing_extensions import override
-
-from nonebot import get_bot
+from typing import TYPE_CHECKING, List, Type, Union, Iterable
 
 from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
-from .model import Element, TextElement, PicElement
-
+from .model import Element
 
 
 class MessageSegment(BaseMessageSegment["Message"]):
     @classmethod
-    @override(BaseMessageSegment)
+    @override
     def get_message_class(cls) -> Type["Message"]:
         # 返回适配器的 Message 类型本身
         return Message
 
-    @override(BaseMessageSegment)
+    @override
     def __str__(self) -> str:
         # 返回该消息段的纯文本表现形式，通常在日志中展示
-        if self.is_text():
-            return escape_tag(self.data.get("text", ""))
-        return str(self.data.dict())
+        return self.data["text"] if self.is_text() else f"[{self.type}: {self.data}]"
 
-    @override(BaseMessageSegment)
+    @override
     def is_text(self) -> bool:
         # 判断该消息段是否为纯文本
         return self.type == "text"
-#
-#     @staticmethod
-#     def text(text: str) -> "MessageSegment":
-#         return MessageSegment("text",
-#             Element(
-#                 elementType=1,
-#                 textElement=TextElement(content=text)
-#             )
-#         )
-#
-#     @staticmethod
-#     def at(text: str, user_id: str) -> "MessageSegment":
-#         return MessageSegment("at",
-#             Element(
-#                 elementType=1,
-#                 textElement=TextElement(
-#                     content=text,
-#                     atType=2,
-#                     atNtUid=user_id
-#                 )
-#             )
-#         )
-#
-#     @staticmethod
-#     def reply(message_seq: str, message_id: str, sender_id: str) -> "MessageSegment":
-#         return MessageSegment("reply",
-#             Element(
-#                 elementType=7,
-#                 replyElement={
-#                     "replayMsgSeq": message_seq,
-#                     "sourceMsgIdInRecords": message_id,
-#                     "senderUid": sender_id
-#                 }
-#             )
-#         )
-#
-#     @staticmethod
-#     def face(face_index: int, face_type: int):
-#         return MessageSegment("face",
-#             Element(
-#                 elementType=6,
-#                 faceElement={
-#                     "faceIndex": face_index,
-#                     "faceType": face_type
-#                 }
-#             )
-#         )
-#
-#     @staticmethod
-#     def image(md5_hex: str, file_size: int, height: int = None, width: int = None, *, filename: str, source_path: str):
-#         return MessageSegment("image",
-#             Element(
-#                 elementType=2,
-#                 picElement=PicElement(
-#                     md5HexStr=md5_hex,
-#                     fileSize=file_size,
-#                     picHeight=height,
-#                     picWidth=width,
-#                     fileName=filename,
-#                     sourcePath=source_path
-#                 )
-#             )
-#         )
-        
+
+    @staticmethod
+    def text(text: str) -> "MessageSegment":
+        return MessageSegment("text", {"text": text})
+
+    @staticmethod
+    def at(user_id: str) -> "MessageSegment":
+        return MessageSegment("at", {"user_id": user_id})
+
+    @staticmethod
+    def at_all() -> "MessageSegment":
+        return MessageSegment("at_all")
+
+    @staticmethod
+    def face(face_id: str) -> "MessageSegment":
+        return MessageSegment("face", {"face_id": face_id})
+
+    @staticmethod
+    def image(file: Union[Path, BytesIO]) -> "MessageSegment":
+        if isinstance(file, Path):
+            file = file.read_bytes()
+        elif isinstance(file, BytesIO):
+            file = file.getvalue()
+        return MessageSegment("image", {"file": file})
+
+    @staticmethod
+    def reply(message_id: str, message_seq: str) -> "MessageSegment":
+        return MessageSegment("reply", {"msg_id": message_id, "msg_seq": message_seq})
+
+    @staticmethod
+    def ark(data: str) -> "MessageSegment":
+        return MessageSegment("ark", {"data": data})
+
 
 class Message(BaseMessage[MessageSegment]):
     @classmethod
-    @override(BaseMessage)
+    @override
     def get_segment_class(cls) -> Type[MessageSegment]:
         # 返回适配器的 MessageSegment 类型本身
         return MessageSegment
-    
-    @classmethod
-    @override(BaseMessage)
-    def get_elements(cls) -> List[Element]:
-        return [msg_seg.data for msg_seg in cls]
 
     @staticmethod
-    @override(BaseMessage)
-    def _construct(data: List[Element]) -> Iterable[MessageSegment]:
-        # 实现从字符串中构造消息数组，如无字符串嵌入格式可直接返回文本类型 MessageSegment
-        result = []
-        for element in data:
-            if isinstance(element, TextElement):
-                if hasattr(element, "atNtUid"):
-                    result.append(MessageSegment.at(element.content, element.atNtUid))
-                elif element.replyElement is not None:
-                    result.append(MessageSegment.reply(element.replyElement["replayMsgSeq"], element.replyElement["sourceMsgIdInRecords"], element.replyElement["senderUid"]))
-                else:
-                    result.append(MessageSegment.text(element.content))
-            if isinstance(element, PicElement):
-                result.append(MessageSegment.image(element.picElement.sourcePath))
-            if element.faceElement is not None:
-                result.append(MessageSegment.face(element.faceElement["faceIndex"], element.faceElement["faceType"]))
-        return result
+    @override
+    def _construct(msg: str) -> Iterable[MessageSegment]:
+        yield MessageSegment.text(msg)
+
+    @classmethod
+    def from_red_message(cls, message: List[Element]) -> "Message":
+        msg = Message()
+        for element in message:
+            if element.elementId == 1:
+                if TYPE_CHECKING:
+                    assert element.textElement
+                text = element.textElement
+                if not text.atType:
+                    msg.append(MessageSegment.text(text.content))
+                elif text.atType == 1:
+                    msg.append(MessageSegment.at_all())
+                elif text.atType == 2:
+                    msg.append(MessageSegment.at(text.atNtUin or text.atNtUid))
+            if element.elementId == 2:
+                if TYPE_CHECKING:
+                    assert element.picElement
+                pic = element.picElement
+                msg.append(
+                    MessageSegment(
+                        "image",
+                        {
+                            "md5": pic.md5HexStr,
+                            "size": pic.fileSize,
+                            "id": element.elementId,
+                            "uuid": pic.fileUuid,
+                            "path": pic.sourcePath,
+                            "width": pic.picWidth,
+                            "height": pic.picHeight,
+                        },
+                    )
+                )
+            if element.elementId == 6:
+                if TYPE_CHECKING:
+                    assert element.faceElement
+                face = element.faceElement
+                msg.append(MessageSegment.face(face["faceIndex"]))
+            if element.elementId == 7:
+                if TYPE_CHECKING:
+                    assert element.replyElement
+                reply = element.replyElement
+                msg.append(
+                    MessageSegment(
+                        "reply",
+                        {
+                            "msg_id": reply["sourceMsgIdInRecords"],
+                            "msg_seq": reply["replayMsgSeq"],
+                        },
+                    )
+                )
+            if element.elementId == 10:
+                if TYPE_CHECKING:
+                    assert element.arkElement
+                ark = element.arkElement
+                msg.append(MessageSegment.ark(ark["bytesData"]))
+        return msg
+
+    async def export(self) -> List[dict]:
+        res = []
+        for seg in self:
+            if seg.type == "text":
+                res.append(
+                    {"elementType": 1, "textElement": {"content": seg.data["text"]}}
+                )
+            elif seg.type == "at":
+                res.append(
+                    {
+                        "elementType": 1,
+                        "textElement": {"atType": 2, "atNtUin": seg.data["user_id"]},
+                    }
+                )
+            elif seg.type == "at_all":
+                res.append({"elementType": 1, "textElement": {"atType": 1}})
+            elif seg.type == "image":
+                # TODO: 上传图片数据然后搓结构体
+                # 需要拉取bytes数据, 并且这里得用formdata
+                # data = await self.account.staff.fetch_resource(element.resource)
+                # resp = await self.account.websocket_client.call_http(
+                #     "multipart",
+                #     "api/upload",
+                #     {
+                #         "file": {
+                #             "value": data,
+                #             "content_type": None,
+                #             "filename": "file_image",
+                #         }
+                #     },
+                # )
+                # return {
+                #     "elementType": 2,
+                #     "picElement": {
+                #         "original": True,
+                #         "md5HexStr": resp["md5"],
+                #         "picWidth": resp["imageInfo"]["width"],
+                #         "picHeight": resp["imageInfo"]["height"],
+                #         "fileSize": resp["fileSize"],
+                #         "sourcePath": resp["ntFilePath"],
+                #     },
+                # }
+                ...
+            elif seg.type == "face":
+                res.append(
+                    {
+                        "elementType": 6,
+                        "faceElement": {"faceIndex": seg.data["face_id"]},
+                    }
+                )
+            elif seg.type == "reply":
+                res.append(
+                    {
+                        "elementType": 7,
+                        "replyElement": {
+                            "sourceMsgIdInRecords": seg.data["msg_id"],
+                            "replayMsgSeq": seg.data["msg_seq"],
+                        },
+                    }
+                )
+        return res

@@ -1,16 +1,15 @@
-import aiohttp
-import json
-from typing import TYPE_CHECKING, Any, Union
 from typing_extensions import override
+from typing import Any, Union
 
 from nonebot.message import handle_event
+
 from nonebot.adapters import Bot as BaseBot
 from nonebot.adapters import Adapter as BaseAdapter
 
+from .utils import log
+from .config import Config
 from .event import Event, MessageEvent
 from .message import Message, MessageSegment
-from .config import Config
-from .utils import log
 
 
 class Bot(BaseBot):
@@ -48,21 +47,15 @@ class Bot(BaseBot):
         # 根据平台实现 Bot 回复事件的方法
 
         # 将消息处理为平台所需的格式后，调用发送消息接口进行发送，例如：
-        element_data = [element.dict() for element in Message(message).get_elements()]
-        chatType, peerUin = await self.get_peer_data(event, kwargs)
-        log(
-            "DEBUG",
-            "Trying to send a message"
-        )
+        element_data = await Message(message).export()
+        chatType, peerUin = await self.get_peer_data(event, **kwargs)
+        log("DEBUG", "Trying to send a message")
         await self.send_message(
             data={
                 "type": "message::send",
                 "payload": {
-                    "peer": {
-                        "chatType": chatType,
-                        "peerUin": peerUin
-                    },
-                    "elements": element_data
-                }
+                    "peer": {"chatType": chatType, "peerUin": peerUin},
+                    "elements": element_data,
+                },
             }
         )

@@ -1,10 +1,6 @@
-from PIL import Image
-from io import BytesIO
-from pathlib import Path
 from typing import Any
 
 from nonebot.utils import logger_wrapper
-
 
 log = logger_wrapper("red")
 
@@ -19,7 +15,12 @@ def handle_data(api: str, **data: Any):
     if api == "group/muteEveryone":
         return "POST", {"group": data["group"], "enable": data.get("enable", True)}
     if api == "group/kick":
-        return "POST", {"uidList": data["uidList"], "group": data["group"], "refuseForever": data.get("refuseForever", False), "reason": data.get("reason", None)}
+        return "POST", {
+            "uidList": data["uidList"],
+            "group": data["group"],
+            "refuseForever": data.get("refuseForever", False),
+            "reason": data.get("reason", None),
+        }
     if api == "group/getAnnouncements":
         return "POST", {"group": data["group"]}
     if api == "group/getMemberList":
@@ -31,7 +32,7 @@ def handle_data(api: str, **data: Any):
             "peerUid": data["peerUid"],
             "elementId": data["elementId"],
             "thumbSize": data["thumbSize"],
-            "downloadType": data["downloadType"]
+            "downloadType": data["downloadType"],
         }
     if api == "upload":
         return "POST", data["file"]
@@ -41,5 +42,5 @@ def handle_data(api: str, **data: Any):
         return "POST", {
             "peer": data["peer"],
             "offsetMsgId": data.get("offsetMsgId", 0),
-            "count": data.get("count", 100)
+            "count": data.get("count", 100),
         }

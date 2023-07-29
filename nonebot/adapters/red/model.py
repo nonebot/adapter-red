@@ -1,37 +1,6 @@
-from typing import Any, List, Union, Optional
+from typing import Any, List, Optional
+
 from pydantic import BaseModel
-
-
-class XMLElement(BaseModel):
-    busiType: str
-    busiId: str
-    c2cType: int
-    serviceType: int
-    ctrlFlag: int
-    content: str
-    templId: str
-    seqId: str
-    templParam: Any
-    pbReserv: str
-    members: Any
-
-
-class ThumbPath(BaseModel):
-    pass
-
-
-class TextElement(BaseModel):
-    content: str
-    atType: Optional[int]
-    atUid: Optional[str]
-    atTinyId: Optional[str]
-    atNtUid: Optional[str]
-    subElementType: Optional[int]
-    atChannelId: Optional[str]
-    atRoleId: Optional[str]
-    atRoleColor: Optional[str]
-    atRoleName: Optional[str]
-    needNotify: Optional[str]
 
 
 class RoleInfo(BaseModel):
@@ -59,6 +28,35 @@ class EmojiZplan(BaseModel):
     bytesReserveInfo: str
 
 
+class XMLElement(BaseModel):
+    busiType: str
+    busiId: str
+    c2cType: int
+    serviceType: int
+    ctrlFlag: int
+    content: str
+    templId: str
+    seqId: str
+    templParam: Any
+    pbReserv: str
+    members: Any
+
+
+class TextElement(BaseModel):
+    content: str
+    atType: Optional[int]
+    atUid: Optional[str]
+    atTinyId: Optional[str]
+    atNtUid: Optional[str]
+    atNtUin: Optional[str]
+    subElementType: Optional[int]
+    atChannelId: Optional[str]
+    atRoleId: Optional[str]
+    atRoleColor: Optional[str]
+    atRoleName: Optional[str]
+    needNotify: Optional[str]
+
+
 class PicElement(BaseModel):
     picSubType: Optional[int]
     fileName: str
@@ -68,7 +66,7 @@ class PicElement(BaseModel):
     original: Optional[bool]
     md5HexStr: str
     sourcePath: str
-    thumbPath: Optional[ThumbPath]
+    thumbPath: Optional[Any]
     transferStatus: Optional[int]
     progress: Optional[int]
     picType: Optional[int]
@@ -86,27 +84,27 @@ class Element(BaseModel):
     elementType: int
     elementId: Optional[str]
     extBufForUI: Optional[str]
-    picElement: Union[None, PicElement]
-    textElement: Union[None, TextElement]
-    arkElement: Any
-    avRecordElement: Any
-    calendarElement: Any
-    faceElement: Any
-    fileElement: Any
-    giphyElement: Any
-    grayTipElement: Any
-    inlineKeyboardElement: Any
-    liveGiftElement: Any
-    markdownElement: Any
-    marketFaceElement: Any
-    multiForwardMsgElement: Any
-    pttElement: Any
-    replyElement: Any
-    structLongMsgElement: Any
-    textGiftElement: Any
-    videoElement: Any
-    walletElement: Any
-    yoloGameResultElement: Any
+    picElement: Optional[PicElement]
+    textElement: Optional[TextElement]
+    arkElement: Optional[dict]
+    avRecordElement: Optional[dict]
+    calendarElement: Optional[dict]
+    faceElement: Optional[dict]
+    fileElement: Optional[dict]
+    giphyElement: Optional[dict]
+    grayTipElement: Optional[dict]
+    inlineKeyboardElement: Optional[dict]
+    liveGiftElement: Optional[dict]
+    markdownElement: Optional[dict]
+    marketFaceElement: Optional[dict]
+    multiForwardMsgElement: Optional[dict]
+    pttElement: Optional[dict]
+    replyElement: Optional[dict]
+    structLongMsgElement: Optional[dict]
+    textGiftElement: Optional[dict]
+    videoElement: Optional[dict]
+    walletElement: Optional[dict]
+    yoloGameResultElement: Optional[dict]
 
 
 class Message(BaseModel):
@@ -119,7 +117,9 @@ class Message(BaseModel):
     subMsgType: int
     sendType: int
     senderUid: str
+    senderUin: Optional[str]
     peerUid: str
+    peerUin: Optional[str]
     channelId: str
     guildId: str
     guildCode: str
