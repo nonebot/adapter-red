@@ -117,9 +117,9 @@ class Message(BaseModel):
     subMsgType: int
     sendType: int
     senderUid: str
-    senderUin: str
+    senderUin: Optional[str]
     peerUid: str
-    peerUin: str
+    peerUin: Optional[str]
     channelId: str
     guildId: str
     guildCode: str
