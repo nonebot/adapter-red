@@ -1,4 +1,3 @@
-from PIL import Image
 from io import BytesIO
 from pathlib import Path
 from base64 import b64encode
@@ -13,7 +12,6 @@ from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
 from .model import Element, TextElement, PicElement
-from .utils import to_bytes
 
 
 class MessageSegment(BaseMessageSegment["Message"]):
