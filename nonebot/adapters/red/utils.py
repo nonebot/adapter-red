@@ -43,23 +43,3 @@ def handle_data(api: str, **data: Any):
             "offsetMsgId": data.get("offsetMsgId", 0),
             "count": data.get("count", 100)
         }
-
-def to_bytes(data):
-    if isinstance(data, str):
-        with open(data, 'rb') as file:
-            return file.read()
-
-    elif isinstance(data, Image.Image):
-        with BytesIO() as buffer:
-            data.save(buffer, format='PNG')
-            return buffer.getvalue()
-
-    elif isinstance(data, bytes):
-        return data
-
-    elif isinstance(data, BytesIO):
-        return data.getvalue()
-
-    elif isinstance(data, Path):
-        with data.open('rb') as file:
-            return file.read()

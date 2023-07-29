@@ -8,7 +8,7 @@ from nonebot.drivers import Driver, Request, ForwardDriver
 from nonebot.adapters import Adapter as BaseAdapter
 from nonebot.adapters import Event as BaseEvent
 from nonebot.exception import WebSocketClosed
-from nonebot.typing import overrides
+from nonebot.typing import override
 from nonebot.utils import escape_tag
 
 from .bot import Bot
@@ -85,7 +85,8 @@ class Adapter(BaseAdapter):
                                     "Failed to get message payload. \n"
                                     f"{data}"
                                 )
-                            asyncio.create_task(bot.handle_event(event))
+                            else:
+                                asyncio.create_task(bot.handle_event(event))
                     except WebSocketClosed as e:
                         log(
                             "ERROR",
@@ -146,17 +147,14 @@ class Adapter(BaseAdapter):
             return cls.parse_obj(payload)
         except Exception as e:
             # 无法正常解析为具体 Event 时，给出日志提示
-            log(
-                "WARNING",
-                f"Parse event error: {str(payload)}",
-            )
+            log("WARNING", f"Parse event error {e!r}: {payload}")
             # 也可以尝试转为基础 Event 进行处理
             return BaseEvent.parse_obj(payload)
 
-    @overrides(BaseAdapter)
+    @override(BaseAdapter)
     async def _call_api(self, bot: Bot, api: str, **data: Any) -> Any:
         log("DEBUG", f"Calling API <y>{api}</y>")  # 给予日志提示
-        method, platform_data = handle_data(data)
+        method, platform_data = handle_data(api, **data)
 
         # 采用 HTTP 请求的方式，需要构造一个 Request 对象
         request = Request(
@@ -167,5 +165,5 @@ class Adapter(BaseAdapter):
             data=data,
         )
         # 发送请求，返回结果
-        return await self.driver.request(request)
+        return await self.request(request)
     
