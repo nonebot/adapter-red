@@ -80,17 +80,81 @@ class PicElement(BaseModel):
     emojiZplan: Optional[EmojiZplan]
 
 
+class FileElement(BaseModel):
+    fileMd5: str
+    fileName: str
+    fileSize: str
+    fileUuid: str
+
+
+class PttElement(BaseModel):
+    fileName: str
+    filePath: str
+    md5HexStr: str
+    voiceChangeType: int
+    '''{0: normal, 1: magic}'''
+    canConvert2Text: bool
+    text: Optional[str]
+    '''原文中这里的`text`比其它属性多缩进了一格，请根据`canConvert2Text`来判断`text`的存在与否'''
+    waveAmplitudes: Any
+    fileUuid: str
+
+
+class FaceElement(BaseModel):
+    faceIndex: str
+    faceText: Optional[str]
+    '''{None: normal, '/xxx': sticker, '': poke}'''
+    faceType: int
+    '''{1: normal, 2: normal-extended, 3: sticker, 5: poke}'''
+    packId: Optional[str]
+    '''{None: other, '1': sticker}'''
+    stickerId: Optional[str]
+    '''{None: other, 'xxx': sticker}'''
+    sourceType: Optional[int]
+    '''{None: other, 1: sticker}'''
+    stickerType: Optional[int]
+    '''{None: other, 1: sticker}'''
+    randomType: Optional[int]
+    '''{None: other, 1: sticker}'''
+    pokeType: Optional[int]
+    '''{None: other, xxx: poke}'''
+    spokeSummary: Optional[str]
+    '''{None: other, '': poke}'''
+    doubleHit: Optional[int]
+    '''{None: other, xxx: poke}'''
+    vaspokeId: Optional[int]
+    '''{None: other, xxx: poke}'''
+    vaspokeName: Optional[str]
+    '''{None: other, 'xxx': poke}'''
+
+
+class ReplyElement(BaseModel):
+    replayMsgId: Optional[str]
+    replayMsgSeq: str
+    replyMsgTime: Optional[str]
+    sourceMsgIdInRecords: str
+    sourceMsgTextElems: Optional[Any]
+    senderUid: Optional[str]
+    senderUidStr: Optional[str]
+    senderUin: Optional[str]
+
+
+class ArkElement(BaseModel):
+    bytesData: Any
+    '''application/json'''
+
+
 class Element(BaseModel):
     elementType: int
     elementId: Optional[str]
     extBufForUI: Optional[str]
     picElement: Optional[PicElement]
     textElement: Optional[TextElement]
-    arkElement: Optional[dict]
+    arkElement: Optional[ArkElement]
     avRecordElement: Optional[dict]
     calendarElement: Optional[dict]
-    faceElement: Optional[dict]
-    fileElement: Optional[dict]
+    faceElement: Optional[FaceElement]
+    fileElement: Optional[FileElement]
     giphyElement: Optional[dict]
     grayTipElement: Optional[dict]
     inlineKeyboardElement: Optional[dict]
@@ -98,8 +162,8 @@ class Element(BaseModel):
     markdownElement: Optional[dict]
     marketFaceElement: Optional[dict]
     multiForwardMsgElement: Optional[dict]
-    pttElement: Optional[dict]
-    replyElement: Optional[dict]
+    pttElement: Optional[PttElement]
+    replyElement: Optional[ReplyElement]
     structLongMsgElement: Optional[dict]
     textGiftElement: Optional[dict]
     videoElement: Optional[dict]

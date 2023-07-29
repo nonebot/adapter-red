@@ -39,16 +39,32 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MessageSegment("at_all")
 
     @staticmethod
-    def face(face_id: str) -> "MessageSegment":
-        return MessageSegment("face", {"face_id": face_id})
-
-    @staticmethod
     def image(file: Union[Path, BytesIO]) -> "MessageSegment":
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
             file = file.getvalue()
         return MessageSegment("image", {"file": file})
+
+    @staticmethod
+    def file(file: Union[Path, BytesIO]) -> "MessageSegment":
+        if isinstance(file, Path):
+            file = file.read_bytes()
+        elif isinstance(file, BytesIO):
+            file = file.getvalue()
+        return MessageSegment("file", {"file": file})
+
+    @staticmethod
+    def voice(file: Union[Path, BytesIO]) -> "MessageSegment":
+        if isinstance(file, Path):
+            file = file.read_bytes()
+        elif isinstance(file, BytesIO):
+            file = file.getvalue()
+        return MessageSegment("voice", {"file": file})
+
+    @staticmethod
+    def face(face_id: str) -> "MessageSegment":
+        return MessageSegment("face", {"face_id": face_id})
 
     @staticmethod
     def reply(message_id: str, message_seq: str) -> "MessageSegment":
@@ -103,11 +119,45 @@ class Message(BaseMessage[MessageSegment]):
                         },
                     )
                 )
+            if element.elementId == 3:
+                if TYPE_CHECKING:
+                    assert element.fileElement
+                file = element.fileElement
+                msg.append(
+                    MessageSegment(
+                        "file",
+                        {
+                            "fileMd5": file.fileMd5,
+                            "fileName": file.fileName,
+                            "fileSize": file.fileSize,
+                            "fileUuid": file.fileUuid,
+                        }
+                    )
+                )
+            if element.elementId == 4:
+                if TYPE_CHECKING:
+                    assert element.pttElement
+                ptt = element.pttElement
+                msg.append(
+                    MessageSegment(
+                        "voice",
+                        {
+                            "fileName": ptt.fileName,
+                            "filePath": ptt.filePath,
+                            "md5HexStr": ptt.md5HexStr,
+                            "voiceChangeType": ptt.voiceChangeType,
+                            "canConvert2Text": ptt.canConvert2Text,
+                            "text": ptt.text,
+                            "waveAmplitudes": ptt.waveAmplitudes,
+                            "fileUuid": ptt.fileUuid,
+                        }
+                    )
+                )
             if element.elementId == 6:
                 if TYPE_CHECKING:
                     assert element.faceElement
                 face = element.faceElement
-                msg.append(MessageSegment.face(face["faceIndex"]))
+                msg.append(MessageSegment.face(face.faceIndex))
             if element.elementId == 7:
                 if TYPE_CHECKING:
                     assert element.replyElement
@@ -116,8 +166,8 @@ class Message(BaseMessage[MessageSegment]):
                     MessageSegment(
                         "reply",
                         {
-                            "msg_id": reply["sourceMsgIdInRecords"],
-                            "msg_seq": reply["replayMsgSeq"],
+                            "msg_id": reply.sourceMsgIdInRecords,
+                            "msg_seq": reply.replayMsgSeq,
                         },
                     )
                 )
@@ -125,7 +175,7 @@ class Message(BaseMessage[MessageSegment]):
                 if TYPE_CHECKING:
                     assert element.arkElement
                 ark = element.arkElement
-                msg.append(MessageSegment.ark(ark["bytesData"]))
+                msg.append(MessageSegment.ark(ark.bytesData))
         return msg
 
     async def export(self) -> List[dict]:
@@ -171,6 +221,10 @@ class Message(BaseMessage[MessageSegment]):
                 #     },
                 # }
                 ...
+            elif seg.type == "file":
+                ...
+            elif seg.type == "voice":
+                ...
             elif seg.type == "face":
                 res.append(
                     {
@@ -188,4 +242,6 @@ class Message(BaseMessage[MessageSegment]):
                         },
                     }
                 )
+            elif seg.type == "ark":
+                ...
         return res
