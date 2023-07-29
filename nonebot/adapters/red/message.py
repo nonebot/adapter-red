@@ -129,3 +129,53 @@ class Message(BaseMessage[MessageSegment]):
                 ark = element.arkElement
                 msg.append(MessageSegment.ark(ark["bytesData"]))
         return msg
+
+    async def export(self) -> List[dict]:
+        res = []
+        for seg in self:
+            if seg.type == "text":
+                res.append({"elementType": 1, "textElement": {"content": seg.data['text']}})
+            elif seg.type == "at":
+                res.append({"elementType": 1, "textElement": {"atType": 2, "atNtUin": seg.data['user_id']}})
+            elif seg.type == "at_all":
+                res.append({"elementType": 1, "textElement": {"atType": 1}})
+            elif seg.type == "image":
+                # TODO: 上传图片数据然后搓结构体
+                # 需要拉取bytes数据, 并且这里得用formdata
+                # data = await self.account.staff.fetch_resource(element.resource)
+                # resp = await self.account.websocket_client.call_http(
+                #     "multipart",
+                #     "api/upload",
+                #     {
+                #         "file": {
+                #             "value": data,
+                #             "content_type": None,
+                #             "filename": "file_image",
+                #         }
+                #     },
+                # )
+                # return {
+                #     "elementType": 2,
+                #     "picElement": {
+                #         "original": True,
+                #         "md5HexStr": resp["md5"],
+                #         "picWidth": resp["imageInfo"]["width"],
+                #         "picHeight": resp["imageInfo"]["height"],
+                #         "fileSize": resp["fileSize"],
+                #         "sourcePath": resp["ntFilePath"],
+                #     },
+                # }
+                ...
+            elif seg.type == "face":
+                res.append({"elementType": 6, "faceElement": {"faceIndex": seg.data["face_id"]}})
+            elif seg.type == "reply":
+                res.append(
+                    {
+                        "elementType": 7,
+                        "replyElement": {
+                            "sourceMsgIdInRecords": seg.data["msg_id"],
+                            "replayMsgSeq": seg.data["msg_seq"]
+                        }
+                    }
+                )
+        return res

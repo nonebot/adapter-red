@@ -48,8 +48,8 @@ class Bot(BaseBot):
         # 根据平台实现 Bot 回复事件的方法
 
         # 将消息处理为平台所需的格式后，调用发送消息接口进行发送，例如：
-        element_data = [element.dict() for element in Message(message).get_elements()]
-        chatType, peerUin = await self.get_peer_data(event, kwargs)
+        element_data = await Message(message).export()
+        chatType, peerUin = await self.get_peer_data(event, **kwargs)
         log(
             "DEBUG",
             "Trying to send a message"

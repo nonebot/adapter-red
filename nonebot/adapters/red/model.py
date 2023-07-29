@@ -118,6 +118,7 @@ class Message(BaseModel):
     senderUid: str
     senderUin: str
     peerUid: str
+    peerUin: str
     channelId: str
     guildId: str
     guildCode: str
