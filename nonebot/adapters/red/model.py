@@ -92,10 +92,10 @@ class PttElement(BaseModel):
     filePath: str
     md5HexStr: str
     voiceChangeType: int
-    '''{0: normal, 1: magic}'''
+    """{0: normal, 1: magic}"""
     canConvert2Text: bool
     text: Optional[str]
-    '''原文中这里的`text`比其它属性多缩进了一格，请根据`canConvert2Text`来判断`text`的存在与否'''
+    """原文中这里的`text`比其它属性多缩进了一格，请根据`canConvert2Text`来判断`text`的存在与否"""
     waveAmplitudes: Any
     fileUuid: str
 
@@ -103,29 +103,29 @@ class PttElement(BaseModel):
 class FaceElement(BaseModel):
     faceIndex: str
     faceText: Optional[str]
-    '''{None: normal, '/xxx': sticker, '': poke}'''
+    """{None: normal, '/xxx': sticker, '': poke}"""
     faceType: int
-    '''{1: normal, 2: normal-extended, 3: sticker, 5: poke}'''
+    """{1: normal, 2: normal-extended, 3: sticker, 5: poke}"""
     packId: Optional[str]
-    '''{None: other, '1': sticker}'''
+    """{None: other, '1': sticker}"""
     stickerId: Optional[str]
-    '''{None: other, 'xxx': sticker}'''
+    """{None: other, 'xxx': sticker}"""
     sourceType: Optional[int]
-    '''{None: other, 1: sticker}'''
+    """{None: other, 1: sticker}"""
     stickerType: Optional[int]
-    '''{None: other, 1: sticker}'''
+    """{None: other, 1: sticker}"""
     randomType: Optional[int]
-    '''{None: other, 1: sticker}'''
+    """{None: other, 1: sticker}"""
     pokeType: Optional[int]
-    '''{None: other, xxx: poke}'''
+    """{None: other, xxx: poke}"""
     spokeSummary: Optional[str]
-    '''{None: other, '': poke}'''
+    """{None: other, '': poke}"""
     doubleHit: Optional[int]
-    '''{None: other, xxx: poke}'''
+    """{None: other, xxx: poke}"""
     vaspokeId: Optional[int]
-    '''{None: other, xxx: poke}'''
+    """{None: other, xxx: poke}"""
     vaspokeName: Optional[str]
-    '''{None: other, 'xxx': poke}'''
+    """{None: other, 'xxx': poke}"""
 
 
 class ReplyElement(BaseModel):
@@ -141,7 +141,7 @@ class ReplyElement(BaseModel):
 
 class ArkElement(BaseModel):
     bytesData: Any
-    '''application/json'''
+    """application/json"""
 
 
 class Element(BaseModel):
