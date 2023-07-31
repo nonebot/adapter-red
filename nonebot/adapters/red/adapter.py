@@ -70,7 +70,8 @@ class Adapter(BaseAdapter):
                 bot = Bot(self, self_id)
                 self.bot_connect(bot)
 
-                log("INFO", f"<y>Bot {escape_tag(self_id)}</y> connected, RedProtocol Version: {connect_data['payload']['version']}")
+                log("INFO", f"<y>Bot {escape_tag(self_id)}</y> connected, "
+                    "RedProtocol Version: {connect_data['payload']['version']}")
                 while True:
                     try:
                         # 处理 websocket

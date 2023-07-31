@@ -7,7 +7,6 @@ from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
 from .model import Element
-from .utils import log
 
 
 class MessageSegment(BaseMessageSegment["Message"]):

@@ -57,7 +57,7 @@ class MessageEvent(Event, MessageModel):
     def get_message(self) -> Message:
         # 获取事件消息的方法，根据事件具体实现，如果事件非消息类型事件，则抛出异常
         return Message.from_red_message(self.elements)
-    
+
     @override
     def get_plaintext(self) -> str:
         return "".join([str(ms) for ms in self.get_message()])
