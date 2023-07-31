@@ -6,6 +6,14 @@ log = logger_wrapper("red")
 
 
 def handle_data(api: str, **data: Any):
+    if api == "send_message":
+        return "POST", {
+                "type": "message::send",
+                "payload": {
+                    "peer": {"chatType": data["chatType"], "peerUin": data["peerUin"]},
+                    "elements": data["element_data"],
+                },
+            }
     if api == "getSelfProfile":
         return "GET", {}
     if api == "bot/friends":

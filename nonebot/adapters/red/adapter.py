@@ -54,7 +54,7 @@ class Adapter(BaseAdapter):
 
         while True:
             try:
-                ws = await websockets.connect(ws_url)
+                self.ws = await websockets.connect(ws_url)
                 log(
                     "DEBUG",
                     f"WebSocket Connection to {escape_tag(str(ws_url))} established",
@@ -63,19 +63,19 @@ class Adapter(BaseAdapter):
                     "type": "meta::connect",
                     "payload": {"token": self.platform_config.token},
                 }
-                await ws.send(json.dumps(connect_packet))
-                connect_data = json.loads(await ws.recv())
+                await self.ws.send(json.dumps(connect_packet))
+                connect_data = json.loads(await self.ws.recv())
 
                 self_id = connect_data["payload"]["authData"]["uin"]
                 bot = Bot(self, self_id)
                 self.bot_connect(bot)
 
-                log("INFO", f"<y>Bot {escape_tag(self_id)}</y> connected")
+                log("INFO", f"<y>Bot {escape_tag(self_id)}</y> connected, RedProtocol Version: {connect_data['payload']['version']}")
                 while True:
                     try:
                         # 处理 websocket
                         while True:
-                            data = await ws.recv()
+                            data = await self.ws.recv()
                             json_data = json.loads(data)
                             try:
                                 event = self.payload_to_event(json_data["payload"][0])
@@ -153,6 +153,11 @@ class Adapter(BaseAdapter):
     async def _call_api(self, bot: Bot, api: str, **data: Any) -> Any:
         log("DEBUG", f"Calling API <y>{api}</y>")  # 给予日志提示
         method, platform_data = handle_data(api, **data)
+
+        if api == "send_message":
+            # 以后red实现端支持send的http api了就删（
+            await self.ws.send(json.dumps(platform_data))
+            return
 
         # 采用 HTTP 请求的方式，需要构造一个 Request 对象
         request = Request(

@@ -7,6 +7,7 @@ from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
 from .model import Element
+from .utils import log
 
 
 class MessageSegment(BaseMessageSegment["Message"]):
@@ -91,7 +92,7 @@ class Message(BaseMessage[MessageSegment]):
     def from_red_message(cls, message: List[Element]) -> "Message":
         msg = Message()
         for element in message:
-            if element.elementId == 1:
+            if element.elementType == 1:
                 if TYPE_CHECKING:
                     assert element.textElement
                 text = element.textElement
@@ -101,7 +102,7 @@ class Message(BaseMessage[MessageSegment]):
                     msg.append(MessageSegment.at_all())
                 elif text.atType == 2:
                     msg.append(MessageSegment.at(text.atNtUin or text.atNtUid))
-            if element.elementId == 2:
+            if element.elementType == 2:
                 if TYPE_CHECKING:
                     assert element.picElement
                 pic = element.picElement
@@ -119,7 +120,7 @@ class Message(BaseMessage[MessageSegment]):
                         },
                     )
                 )
-            if element.elementId == 3:
+            if element.elementType == 3:
                 if TYPE_CHECKING:
                     assert element.fileElement
                 file = element.fileElement
@@ -134,7 +135,7 @@ class Message(BaseMessage[MessageSegment]):
                         }
                     )
                 )
-            if element.elementId == 4:
+            if element.elementType == 4:
                 if TYPE_CHECKING:
                     assert element.pttElement
                 ptt = element.pttElement
@@ -153,12 +154,12 @@ class Message(BaseMessage[MessageSegment]):
                         }
                     )
                 )
-            if element.elementId == 6:
+            if element.elementType == 6:
                 if TYPE_CHECKING:
                     assert element.faceElement
                 face = element.faceElement
                 msg.append(MessageSegment.face(face.faceIndex))
-            if element.elementId == 7:
+            if element.elementType == 7:
                 if TYPE_CHECKING:
                     assert element.replyElement
                 reply = element.replyElement
@@ -171,7 +172,7 @@ class Message(BaseMessage[MessageSegment]):
                         },
                     )
                 )
-            if element.elementId == 10:
+            if element.elementType == 10:
                 if TYPE_CHECKING:
                     assert element.arkElement
                 ark = element.arkElement

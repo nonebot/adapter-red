@@ -57,6 +57,10 @@ class MessageEvent(Event, MessageModel):
     def get_message(self) -> Message:
         # 获取事件消息的方法，根据事件具体实现，如果事件非消息类型事件，则抛出异常
         return Message.from_red_message(self.elements)
+    
+    @override
+    def get_plaintext(self) -> str:
+        return "".join([str(ms) for ms in self.get_message()])
 
     @override
     def get_user_id(self) -> str:
@@ -77,7 +81,7 @@ class PrivateMessageEvent(MessageEvent):
     chatType: Literal[1]
 
     @override
-    def get_type(self) -> str:
+    def get_event_name(self) -> str:
         return "message.private"
 
     @override
@@ -90,7 +94,7 @@ class GroupMessageEvent(MessageEvent):
     chatType: Literal[2]
 
     @override
-    def get_type(self) -> str:
+    def get_event_name(self) -> str:
         return "message.group"
 
     @override

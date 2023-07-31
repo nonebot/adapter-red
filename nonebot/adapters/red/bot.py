@@ -51,11 +51,7 @@ class Bot(BaseBot):
         chatType, peerUin = await self.get_peer_data(event, **kwargs)
         log("DEBUG", "Trying to send a message")
         await self.send_message(
-            data={
-                "type": "message::send",
-                "payload": {
-                    "peer": {"chatType": chatType, "peerUin": peerUin},
-                    "elements": element_data,
-                },
-            }
+            chatType = chatType,
+            peerUin = peerUin,
+            element_data = element_data,
         )
