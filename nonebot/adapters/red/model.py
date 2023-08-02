@@ -140,7 +140,7 @@ class ReplyElement(BaseModel):
 
 
 class ArkElement(BaseModel):
-    bytesData: Any
+    bytesData: str
     """application/json"""
 
 

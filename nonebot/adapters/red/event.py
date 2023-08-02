@@ -1,12 +1,12 @@
-from typing_extensions import override
 from typing import Literal
+from typing_extensions import override
 
 from nonebot.utils import escape_tag
 
 from nonebot.adapters import Event as BaseEvent
 
-from .model import Message as MessageModel
 from .message import Message
+from .model import Message as MessageModel
 
 
 class Event(BaseEvent):
@@ -56,7 +56,7 @@ class MessageEvent(Event, MessageModel):
     @override
     def get_message(self) -> Message:
         # 获取事件消息的方法，根据事件具体实现，如果事件非消息类型事件，则抛出异常
-        return Message.from_red_message(self.elements)
+        return Message.from_red_message(self.elements, self.msgId)
 
     @override
     def get_plaintext(self) -> str:

@@ -1,5 +1,5 @@
+from typing import Any, Tuple, Union
 from typing_extensions import override
-from typing import Any, Union
 
 from nonebot.message import handle_event
 
@@ -32,9 +32,9 @@ class Bot(BaseBot):
         # TODO: 见上
         await handle_event(self, event)
 
-    async def get_peer_data(self, event: Event, **kwargs: Any):
+    async def get_peer_data(self, event: Event, **kwargs: Any) -> Tuple[int, str]:
         if isinstance(event, MessageEvent):
-            return event.chatType, event.peerUin
+            return event.chatType, event.peerUin or event.peerUid
         return kwargs["chatType"], kwargs["peerUin"]
 
     @override
@@ -47,11 +47,11 @@ class Bot(BaseBot):
         # 根据平台实现 Bot 回复事件的方法
 
         # 将消息处理为平台所需的格式后，调用发送消息接口进行发送，例如：
-        element_data = await Message(message).export()
         chatType, peerUin = await self.get_peer_data(event, **kwargs)
+        element_data = await Message(message).export(self.adapter, chatType, peerUin)
         log("DEBUG", "Trying to send a message")
         await self.send_message(
-            chatType = chatType,
-            peerUin = peerUin,
-            element_data = element_data,
+            chatType=chatType,
+            peerUin=peerUin,
+            element_data=element_data,
         )

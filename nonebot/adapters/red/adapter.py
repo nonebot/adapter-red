@@ -3,6 +3,7 @@ import asyncio
 from typing import Any, Dict, Optional
 
 import websockets
+from yarl import URL
 from nonebot.typing import override
 from nonebot.utils import escape_tag
 from nonebot.exception import WebSocketClosed
@@ -44,6 +45,10 @@ class Adapter(BaseAdapter):
         self.driver.on_startup(self.startup)
         self.driver.on_shutdown(self.shutdown)
 
+    @property
+    def api_base(self) -> URL:
+        return URL(f"http://localhost:{self.platform_config.port}") / "api"
+
     async def startup(self) -> None:
         """定义启动时的操作，例如和平台建立连接"""
         self.task = asyncio.create_task(self._forward_ws())  # 建立 ws 连接
@@ -70,8 +75,11 @@ class Adapter(BaseAdapter):
                 bot = Bot(self, self_id)
                 self.bot_connect(bot)
 
-                log("INFO", f"<y>Bot {escape_tag(self_id)}</y> connected, "
-                    "RedProtocol Version: {connect_data['payload']['version']}")
+                log(
+                    "INFO",
+                    f"<y>Bot {escape_tag(self_id)}</y> connected, "
+                    "RedProtocol Version: {connect_data['payload']['version']}",
+                )
                 while True:
                     try:
                         # 处理 websocket
@@ -160,10 +168,12 @@ class Adapter(BaseAdapter):
             await self.ws.send(json.dumps(platform_data))
             return
 
+        api = api.replace("_", "/", 1)  # message_recall -> message/recall
+
         # 采用 HTTP 请求的方式，需要构造一个 Request 对象
         request = Request(
             method=method,  # 请求方法
-            url=f"http://localhost:{self.platform_config.port}/api/{api}",  # 接口地址
+            url=self.api_base / api,  # 接口地址
             headers={
                 "Authorization": f"Bearer {self.platform_config.token}"
             },  # 请求头，通常需要包含鉴权信息
