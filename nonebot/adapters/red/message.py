@@ -102,7 +102,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
         elif isinstance(file, BytesIO):
             file = file.getvalue()
         return MessageSegment("voice", {"file": file})
-    
+
     @staticmethod
     def video(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
         if isinstance(file, Path):
@@ -125,9 +125,15 @@ class MessageSegment(BaseMessageSegment["Message"]):
     @staticmethod
     def ark(data: str) -> "MessageSegment":
         return MessageSegment("ark", {"data": data})
-    
+
     @staticmethod
-    def market_face(package_id: str, emoji_id: str, face_name: str, key: str, face_path: str) -> "MessageSegment":
+    def market_face(
+        package_id: str,
+        emoji_id: str,
+        face_name: str,
+        key: str,
+        face_path: str
+    ) -> "MessageSegment":
         log("WARNING", "market_face only can be received!")
         return MessageSegment(
             "market_face",
@@ -139,7 +145,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
                 "face_path": face_path,
             },
         )
-    
+
     @staticmethod
     def forward_msg(xml: str, id: str, file_name: str) -> "MessageSegment":
         log("WARNING", "forward_msg only can be received!")
@@ -373,11 +379,14 @@ class Message(BaseMessage[MessageSegment]):
                     }
                 )
             elif seg.type == "file":
-                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
+                raise NotImplementedError("Unsupported MessageSegment type: " 
+                                          f"{seg.type}")
             elif seg.type == "voice":
-                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
+                raise NotImplementedError("Unsupported MessageSegment type: " 
+                                          f"{seg.type}")            
             elif seg.type == "video":
-                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
+                raise NotImplementedError("Unsupported MessageSegment type: " 
+                                          f"{seg.type}")
             elif seg.type == "face":
                 res.append(
                     {
@@ -401,7 +410,9 @@ class Message(BaseMessage[MessageSegment]):
                     {"elementType": 10, "arkElement": {"bytesData": seg.data["data"]}}
                 )
             elif seg.type == "market_face":
-                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
+                raise NotImplementedError("Unsupported MessageSegment type: " 
+                                          f"{seg.type}")
             elif seg.type == "forward_msg":
-                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
+                raise NotImplementedError("Unsupported MessageSegment type: " 
+                                          f"{seg.type}")
         return res
