@@ -374,6 +374,7 @@ class Message(BaseMessage[MessageSegment]):
                             "picWidth": resp["imageInfo"]["width"],
                             "picHeight": resp["imageInfo"]["height"],
                             "fileSize": resp["fileSize"],
+                            "fileName": resp["ntFilePath"].split("/")[-1],
                             "sourcePath": resp["ntFilePath"],
                         },
                     }
