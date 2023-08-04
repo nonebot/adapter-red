@@ -383,7 +383,7 @@ class Message(BaseMessage[MessageSegment]):
                                           f"{seg.type}")
             elif seg.type == "voice":
                 raise NotImplementedError("Unsupported MessageSegment type: "
-                                          f"{seg.type}")            
+                                          f"{seg.type}")
             elif seg.type == "video":
                 raise NotImplementedError("Unsupported MessageSegment type: "
                                           f"{seg.type}")
