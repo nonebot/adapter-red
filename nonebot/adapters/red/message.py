@@ -379,13 +379,13 @@ class Message(BaseMessage[MessageSegment]):
                     }
                 )
             elif seg.type == "file":
-                raise NotImplementedError("Unsupported MessageSegment type: " 
+                raise NotImplementedError("Unsupported MessageSegment type: "
                                           f"{seg.type}")
             elif seg.type == "voice":
-                raise NotImplementedError("Unsupported MessageSegment type: " 
+                raise NotImplementedError("Unsupported MessageSegment type: "
                                           f"{seg.type}")            
             elif seg.type == "video":
-                raise NotImplementedError("Unsupported MessageSegment type: " 
+                raise NotImplementedError("Unsupported MessageSegment type: "
                                           f"{seg.type}")
             elif seg.type == "face":
                 res.append(
@@ -410,9 +410,9 @@ class Message(BaseMessage[MessageSegment]):
                     {"elementType": 10, "arkElement": {"bytesData": seg.data["data"]}}
                 )
             elif seg.type == "market_face":
-                raise NotImplementedError("Unsupported MessageSegment type: " 
+                raise NotImplementedError("Unsupported MessageSegment type: "
                                           f"{seg.type}")
             elif seg.type == "forward_msg":
-                raise NotImplementedError("Unsupported MessageSegment type: " 
+                raise NotImplementedError("Unsupported MessageSegment type: "
                                           f"{seg.type}")
         return res
