@@ -59,10 +59,6 @@ class MessageEvent(Event, MessageModel):
         return Message.from_red_message(self.elements, self.msgId)
 
     @override
-    def get_plaintext(self) -> str:
-        return "".join([str(ms) for ms in self.get_message()])
-
-    @override
     def get_user_id(self) -> str:
         # 获取用户 ID 的方法，根据事件具体实现，如果事件没有用户 ID，则抛出异常
         if self.senderUin is None:
@@ -86,7 +82,7 @@ class PrivateMessageEvent(MessageEvent):
 
     @override
     def get_event_description(self) -> str:
-        text = f"收到好友 {self.senderUin} 的消息: {self.get_plaintext()}"
+        text = f"收到好友 {self.senderUin} 的消息: {self.get_message()}"
         return escape_tag(str(text))
 
 
@@ -101,6 +97,6 @@ class GroupMessageEvent(MessageEvent):
     def get_event_description(self) -> str:
         text = (
             f"收到群 {self.peerName} 内 {self.sendMemberName} 的消息: "
-            f"{self.get_plaintext()}"
+            f"{self.get_message()}"
         )
         return escape_tag(str(text))

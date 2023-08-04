@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Literal
 
 from pydantic import BaseModel
 
@@ -144,6 +144,47 @@ class ArkElement(BaseModel):
     """application/json"""
 
 
+class MarketFaceElement(BaseModel):
+    itemType: Literal[6]
+    faceInfo: Literal[1]
+    emojiPackageId: str
+    subType: Literal[3]
+    faceName: str
+    emojiId: str
+    key: str
+    staticFacePath: str
+    dynamicFacePath: str
+
+
+class MultiForwardMsgElement(BaseModel):
+    xmlContent: str
+    resId: str
+    fileName: str
+
+
+class VideoElement(BaseModel):
+    filePath: str
+    fileName: str
+    videoMd5: str
+    thumbMd5: str
+    fileTime: int
+    thumbSize: int
+    fileFormat: int
+    fileSize: str
+    thumbWidth: int
+    thumbHeight: int
+    busiType: int
+    subBusiType: int
+    thumbPath: dict
+    """不清楚为什么是dict，这是收到的数据: {}"""
+    transferStatus: int
+    progress: int
+    invalidState: int
+    fileUuid: str
+    fileSubId: str
+    fileBizId: Optional[str]
+
+
 class Element(BaseModel):
     elementType: int
     elementId: Optional[str]
@@ -160,13 +201,13 @@ class Element(BaseModel):
     inlineKeyboardElement: Optional[dict]
     liveGiftElement: Optional[dict]
     markdownElement: Optional[dict]
-    marketFaceElement: Optional[dict]
-    multiForwardMsgElement: Optional[dict]
+    marketFaceElement: Optional[MarketFaceElement]
+    multiForwardMsgElement: Optional[MultiForwardMsgElement]
     pttElement: Optional[PttElement]
     replyElement: Optional[ReplyElement]
     structLongMsgElement: Optional[dict]
     textGiftElement: Optional[dict]
-    videoElement: Optional[dict]
+    videoElement: Optional[VideoElement]
     walletElement: Optional[dict]
     yoloGameResultElement: Optional[dict]
 

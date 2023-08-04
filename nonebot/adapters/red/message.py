@@ -11,6 +11,7 @@ from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
 from .model import Element
+from .utils import log
 
 if TYPE_CHECKING:
     from .adapter import Adapter
@@ -79,7 +80,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MessageSegment("at_all")
 
     @staticmethod
-    def image(file: Union[Path, BytesIO]) -> "MessageSegment":
+    def image(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
@@ -87,7 +88,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MessageSegment("image", {"file": file})
 
     @staticmethod
-    def file(file: Union[Path, BytesIO]) -> "MessageSegment":
+    def file(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
@@ -95,12 +96,20 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MessageSegment("file", {"file": file})
 
     @staticmethod
-    def voice(file: Union[Path, BytesIO]) -> "MessageSegment":
+    def voice(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
             file = file.getvalue()
         return MessageSegment("voice", {"file": file})
+    
+    @staticmethod
+    def video(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
+        if isinstance(file, Path):
+            file = file.read_bytes()
+        elif isinstance(file, BytesIO):
+            file = file.getvalue()
+        return MessageSegment("video", {"file": file})
 
     @staticmethod
     def face(face_id: str) -> "MessageSegment":
@@ -116,7 +125,28 @@ class MessageSegment(BaseMessageSegment["Message"]):
     @staticmethod
     def ark(data: str) -> "MessageSegment":
         return MessageSegment("ark", {"data": data})
-
+    
+    @staticmethod
+    def market_face(package_id: str, emoji_id: str, face_name: str, key: str, face_path: str) -> "MessageSegment":
+        log("WARNING", "market_face only can be received!")
+        return MessageSegment(
+            "market_face",
+            {
+                "package_id": package_id,
+                "emoji_id": emoji_id,
+                "face_name": face_name,
+                "key": key,
+                "face_path": face_path,
+            },
+        )
+    
+    @staticmethod
+    def forward_msg(xml: str, id: str, file_name: str) -> "MessageSegment":
+        log("WARNING", "forward_msg only can be received!")
+        return MessageSegment(
+            "forward_msg",
+            {"xml": xml, "id": id, "name": file_name},
+        )
 
 class Message(BaseMessage[MessageSegment]):
     @classmethod
@@ -203,6 +233,36 @@ class Message(BaseMessage[MessageSegment]):
                         },
                     )
                 )
+            if element.elementType == 5:
+                if TYPE_CHECKING:
+                    assert element.videoElement
+                video = element.videoElement
+                msg.append(
+                    MessageSegment(
+                        "video",
+                        {
+                            "filePath": video.filePath,
+                            "fileName": video.fileName,
+                            "videoMd5": video.videoMd5,
+                            "thumbMd5": video.thumbMd5,
+                            "fileTime": video.fileTime,
+                            "thumbSize": video.thumbSize,
+                            "fileFormat": video.fileFormat,
+                            "fileSize": video.fileSize,
+                            "thumbWidth": video.thumbWidth,
+                            "thumbHeight": video.thumbHeight,
+                            "busiType": video.busiType,
+                            "subBusiType": video.subBusiType,
+                            "thumbPath": video.thumbPath,
+                            "transferStatus": video.transferStatus,
+                            "progress": video.progress,
+                            "invalidState": video.invalidState,
+                            "fileUuid": video.fileUuid,
+                            "fileSubId": video.fileSubId,
+                            "fileBizId": video.fileBizId,
+                        }
+                    )
+                )
             if element.elementType == 6:
                 if TYPE_CHECKING:
                     assert element.faceElement
@@ -227,6 +287,37 @@ class Message(BaseMessage[MessageSegment]):
                     assert element.arkElement
                 ark = element.arkElement
                 msg.append(MessageSegment.ark(ark.bytesData))
+            if element.elementType == 11:
+                if TYPE_CHECKING:
+                    assert element.marketFaceElement
+                market_face = element.marketFaceElement
+                msg.append(
+                    MessageSegment(
+                        "market_face",
+                        {
+                            "package_id": market_face.emojiPackageId,
+                            "face_name": market_face.faceName,
+                            "emoji_id": market_face.emojiId,
+                            "key": market_face.key,
+                            "static_path": market_face.staticFacePath,
+                            "dynamic_path": market_face.dynamicFacePath,
+                        }
+                    )
+                )
+            if element.elementType == 16:
+                if TYPE_CHECKING:
+                    assert element.multiForwardMsgElement
+                forward_msg = element.multiForwardMsgElement
+                msg.append(
+                    MessageSegment(
+                        "forward_msg",
+                        {
+                            "xml": forward_msg.xmlContent,
+                            "id": forward_msg.resId,
+                            "name": forward_msg.fileName,
+                        }
+                    )
+                )
         return msg
 
     async def export(
@@ -281,11 +372,12 @@ class Message(BaseMessage[MessageSegment]):
                         },
                     }
                 )
-
             elif seg.type == "file":
-                ...
+                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
             elif seg.type == "voice":
-                ...
+                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
+            elif seg.type == "video":
+                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
             elif seg.type == "face":
                 res.append(
                     {
@@ -308,4 +400,8 @@ class Message(BaseMessage[MessageSegment]):
                 res.append(
                     {"elementType": 10, "arkElement": {"bytesData": seg.data["data"]}}
                 )
+            elif seg.type == "market_face":
+                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
+            elif seg.type == "forward_msg":
+                raise NotImplementedError(f"Unsupported MessageSegment type: {seg.type}")
         return res
