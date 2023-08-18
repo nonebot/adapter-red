@@ -68,7 +68,13 @@ def _audio_trans(file: str, ffmpeg: str = "ffmpeg") -> bytes:
 
 def _get_duration(file: str, ffmpeg: str = "ffmpeg") -> int:
     cmd: str = f"{ffmpeg} -i {file} {file}.mp3"
-    result = subprocess.run(cmd, shell=True, check=False, capture_output=True, input=b"y")
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        check=False,
+        capture_output=True,
+        input=b"y"
+    )
     out_str: str = result.stderr.decode()
     reg_duration: str = r"Duration: ([0-9:.]+),"
     rs: re.Match = re.search(reg_duration, out_str)
