@@ -12,7 +12,6 @@ from typing_extensions import override
 
 from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
-from nonebot.adapters import Adapter
 
 from nonebot.exception import NetworkError
 from nonebot.internal.driver import Request
@@ -53,12 +52,12 @@ def _handle_audio(buffer: bytes) -> Dict[str, Union[str, int]]:
         "duration": duration,
     }
 
-def _audio_trans(file: str, ffmpeg: str = 'ffmpeg') -> bytes:
+def _audio_trans(file: str, ffmpeg: str = "ffmpeg") -> bytes:
     tmpfile: str = os.path.join(TMP_DIR, str(uuid.uuid4()))
     cmd: str = f"{ffmpeg} -y -i {file} -ac 1 -ar 8000 -ab 12.2k -f amr {tmpfile}"
-    
+
     try:
-        subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(cmd, shell=True, check=True, capture_output=True)
         with open(tmpfile, "rb") as f:
             amr: bytes = f.read()
         return amr
@@ -69,7 +68,7 @@ def _audio_trans(file: str, ffmpeg: str = 'ffmpeg') -> bytes:
 
 def _get_duration(file: str, ffmpeg: str = "ffmpeg") -> int:
     cmd: str = f"{ffmpeg} -i {file} {file}.mp3"
-    result: subprocess.CompletedProcess = subprocess.run(cmd, shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, input=b"y")
+    result = subprocess.run(cmd, shell=True, check=False, capture_output=True, input=b"y")
     out_str: str = result.stderr.decode()
     reg_duration: str = r"Duration: ([0-9:.]+),"
     rs: re.Match = re.search(reg_duration, out_str)
