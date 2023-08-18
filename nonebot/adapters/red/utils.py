@@ -1,3 +1,4 @@
+import struct
 from typing import Any
 
 from nonebot.utils import logger_wrapper
@@ -52,3 +53,9 @@ def handle_data(api: str, **data: Any):
             "offsetMsgId": data.get("offsetMsgId", 0),
             "count": data.get("count", 100),
         }
+
+def is_amr(data: bytes) -> bool:
+    amr_nb_header = b"#!AMR\n"
+    amr_wb_header = b"#!AMR-WB\n"
+    header = struct.unpack("6s", data[:6])[0]
+    return header == amr_nb_header or header == amr_wb_header

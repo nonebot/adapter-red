@@ -78,7 +78,7 @@ class Adapter(BaseAdapter):
                 log(
                     "INFO",
                     f"<y>Bot {escape_tag(self_id)}</y> connected, "
-                    "RedProtocol Version: {connect_data['payload']['version']}",
+                    f"RedProtocol Version: {connect_data['payload']['version']}",
                 )
                 while True:
                     try:

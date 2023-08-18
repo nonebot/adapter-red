@@ -1,21 +1,85 @@
+import hashlib
 import json
+import os
+import re
+import subprocess
+import tempfile
+import uuid
 from io import BytesIO
 from pathlib import Path
+from typing import TYPE_CHECKING, List, Dict, Type, Union, Iterable, Optional
 from typing_extensions import override
-from typing import TYPE_CHECKING, List, Type, Union, Iterable, Optional
+
+from nonebot.adapters import Message as BaseMessage
+from nonebot.adapters import MessageSegment as BaseMessageSegment
+from nonebot.adapters import Adapter
 
 from nonebot.exception import NetworkError
 from nonebot.internal.driver import Request
 
-from nonebot.adapters import Message as BaseMessage
-from nonebot.adapters import MessageSegment as BaseMessageSegment
-
 from .model import Element
-from .utils import log
+from .utils import log, is_amr
 
 if TYPE_CHECKING:
     from .adapter import Adapter
 
+
+TMP_DIR: str = tempfile.gettempdir()
+
+def _handle_audio(buffer: bytes) -> Dict[str, Union[str, int]]:
+    head: str = buffer[:7].decode()
+
+    if not is_amr(buffer):
+        uuid_str: str = str(uuid.uuid4())
+        save_path: str = os.path.join(TMP_DIR, uuid_str)
+        with open(save_path, "wb") as f:
+            f.write(buffer)
+        buffer = _audio_trans(save_path)
+        os.remove(save_path)
+
+    md5: str = hashlib.md5(buffer).hexdigest()
+
+    save_path = os.path.join(TMP_DIR, md5)
+    with open(save_path, "wb") as f:
+        f.write(buffer)
+
+    duration: int = 0 if "SILK" in head else _get_duration(save_path)
+    os.remove(f"{save_path}.mp3")
+
+    return {
+        "md5": md5,
+        "fileSize": len(buffer),
+        "filePath": save_path,
+        "duration": duration,
+    }
+
+def _audio_trans(file: str, ffmpeg: str = 'ffmpeg') -> bytes:
+    tmpfile: str = os.path.join(TMP_DIR, str(uuid.uuid4()))
+    cmd: str = f"{ffmpeg} -y -i {file} -ac 1 -ar 8000 -ab 12.2k -f amr {tmpfile}"
+    
+    try:
+        subprocess.run(cmd, shell=True, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        with open(tmpfile, "rb") as f:
+            amr: bytes = f.read()
+        return amr
+    except subprocess.CalledProcessError:
+        raise Exception("音频转码到 amr 失败, 请确认你的 ffmpeg 可以处理此转换")
+    finally:
+        os.remove(tmpfile)
+
+def _get_duration(file: str, ffmpeg: str = "ffmpeg") -> int:
+    cmd: str = f"{ffmpeg} -i {file} {file}.mp3"
+    result: subprocess.CompletedProcess = subprocess.run(cmd, shell=True, check=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, input=b"y")
+    out_str: str = result.stderr.decode()
+    reg_duration: str = r"Duration: ([0-9:.]+),"
+    rs: re.Match = re.search(reg_duration, out_str)
+    if rs is None:
+        raise Exception("获取音频时长失败, 请确认你的 ffmpeg 可用")
+    else:
+        time_str: str = rs.group(1)
+        parts: List[str] = time_str.split(":")
+        seconds: int = int(int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2]))
+        return seconds
 
 async def _handle_image(
     adapter: "Adapter", data: dict, chat_type: int, peer_uin: str
@@ -374,7 +438,7 @@ class Message(BaseMessage[MessageSegment]):
                             "picWidth": resp["imageInfo"]["width"],
                             "picHeight": resp["imageInfo"]["height"],
                             "fileSize": resp["fileSize"],
-                            "fileName": resp["ntFilePath"].split("/")[-1],
+                            "fileName": resp["ntFilePath"].split("\\")[-1],
                             "sourcePath": resp["ntFilePath"],
                         },
                     }
@@ -383,8 +447,21 @@ class Message(BaseMessage[MessageSegment]):
                 raise NotImplementedError("Unsupported MessageSegment type: "
                                           f"{seg.type}")
             elif seg.type == "voice":
-                raise NotImplementedError("Unsupported MessageSegment type: "
-                                          f"{seg.type}")
+                data = _handle_audio(seg.data["file"])
+                print(data)
+                res.append(
+                    {
+                        "elementType": 4,
+                        "pttElement": {
+                            "md5HexStr": data["md5"],
+                            "fileSize": data["fileSize"],
+                            "fileName": data["md5"] + ".amr",
+                            "filePath": data["filePath"],
+                            "waveAmplitudes": [8, 0, 40, 0, 56, 0],
+                            "duration": data["duration"],
+                        }
+                    }
+                )
             elif seg.type == "video":
                 raise NotImplementedError("Unsupported MessageSegment type: "
                                           f"{seg.type}")
