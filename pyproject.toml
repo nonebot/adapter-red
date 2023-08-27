@@ -6,7 +6,7 @@ authors = [
     {name = "zhaomaoniu"},
 ]
 dependencies = [
-    "nonebot2[httpx,websockets]>=2.0.1",
+    "nonebot2>=2.0.1",
 ]
 requires-python = ">=3.8"
 readme = "README.md"
@@ -22,9 +22,10 @@ dev = [
     "black>=23.7.0",
     "ruff>=0.0.280",
     "pre-commit>=3.3.3",
+    "nonebot2[httpx,websockets]>=2.0.1",
 ]
 [tool.pdm.build]
-includes = ["src/nonebot_plugin_alconna"]
+includes = ["nonebot"]
 
 [tool.black]
 line-length = 88
