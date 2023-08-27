@@ -96,7 +96,8 @@ class GroupMessageEvent(MessageEvent):
     @override
     def get_event_description(self) -> str:
         text = (
-            f"收到群 {self.peerName} 内 {self.sendMemberName} 的消息: "
+            f"收到群 {self.peerName} 内 "
+            f"{self.sendMemberName} 的消息: "
             f"{self.get_message()}"
         )
         return escape_tag(str(text))

@@ -7,7 +7,7 @@ from nonebot.adapters import Bot as BaseBot
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .utils import log
-from .config import Config
+from .config import BotInfo
 from .event import Event, MessageEvent
 from .message import Message, MessageSegment
 
@@ -18,10 +18,12 @@ class Bot(BaseBot):
     """
 
     @override
-    def __init__(self, adapter: BaseAdapter, self_id: str, **kwargs: Any):
+    def __init__(
+        self, adapter: BaseAdapter, self_id: str, info: BotInfo, **kwargs: Any
+    ):
         super().__init__(adapter, self_id)
         self.adapter: BaseAdapter = adapter
-        self.platform_config = Config.parse_obj(self.config)
+        self.info: BotInfo = info
         # 一些有关 Bot 的信息也可以在此定义和存储
 
     async def handle_event(self, event: Event):
@@ -48,7 +50,9 @@ class Bot(BaseBot):
 
         # 将消息处理为平台所需的格式后，调用发送消息接口进行发送，例如：
         chatType, peerUin = await self.get_peer_data(event, **kwargs)
-        element_data = await Message(message).export(self.adapter, chatType, peerUin)
+        element_data = await Message(message).export(
+            self.adapter, self.info, chatType, peerUin
+        )
         log("DEBUG", "Trying to send a message")
         await self.send_message(
             chatType=chatType,

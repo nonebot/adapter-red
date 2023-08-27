@@ -1,29 +1,31 @@
-import hashlib
-import json
 import os
 import re
-import subprocess
-import tempfile
+import json
 import uuid
+import hashlib
+import tempfile
+import subprocess
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Dict, Type, Union, Iterable, Optional
 from typing_extensions import override
-
-from nonebot.adapters import Message as BaseMessage
-from nonebot.adapters import MessageSegment as BaseMessageSegment
+from typing import TYPE_CHECKING, Dict, List, Type, Union, Iterable, Optional
 
 from nonebot.exception import NetworkError
 from nonebot.internal.driver import Request
 
+from nonebot.adapters import Message as BaseMessage
+from nonebot.adapters import MessageSegment as BaseMessageSegment
+
 from .model import Element
 from .utils import log, is_amr
+from .config import BotInfo
 
 if TYPE_CHECKING:
     from .adapter import Adapter
 
 
 TMP_DIR: str = tempfile.gettempdir()
+
 
 def _handle_audio(buffer: bytes) -> Dict[str, Union[str, int]]:
     head: str = buffer[:7].decode()
@@ -52,6 +54,7 @@ def _handle_audio(buffer: bytes) -> Dict[str, Union[str, int]]:
         "duration": duration,
     }
 
+
 def _audio_trans(file: str, ffmpeg: str = "ffmpeg") -> bytes:
     tmpfile: str = os.path.join(TMP_DIR, str(uuid.uuid4()))
     cmd: str = f"{ffmpeg} -y -i {file} -ac 1 -ar 8000 -ab 12.2k -f amr {tmpfile}"
@@ -61,33 +64,31 @@ def _audio_trans(file: str, ffmpeg: str = "ffmpeg") -> bytes:
         with open(tmpfile, "rb") as f:
             amr: bytes = f.read()
         return amr
-    except subprocess.CalledProcessError:
-        raise Exception("音频转码到 amr 失败, 请确认你的 ffmpeg 可以处理此转换")
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            "音频转码到 amr 失败, 请确认你的 ffmpeg 可以处理此转换"
+        ) from e
     finally:
         os.remove(tmpfile)
+
 
 def _get_duration(file: str, ffmpeg: str = "ffmpeg") -> int:
     cmd: str = f"{ffmpeg} -i {file} {file}.mp3"
     result = subprocess.run(
-        cmd,
-        shell=True,
-        check=False,
-        capture_output=True,
-        input=b"y"
+        cmd, shell=True, check=False, capture_output=True, input=b"y"
     )
     out_str: str = result.stderr.decode()
     reg_duration: str = r"Duration: ([0-9:.]+),"
-    rs: re.Match = re.search(reg_duration, out_str)
-    if rs is None:
-        raise Exception("获取音频时长失败, 请确认你的 ffmpeg 可用")
-    else:
-        time_str: str = rs.group(1)
-        parts: List[str] = time_str.split(":")
-        seconds: int = int(int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2]))
-        return seconds
+    rs = re.search(reg_duration, out_str)
+    if not rs:
+        raise RuntimeError("获取音频时长失败, 请确认你的 ffmpeg 可用")
+    time_str: str = rs[1]
+    parts: List[str] = time_str.split(":")
+    return int(int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2]))
+
 
 async def _handle_image(
-    adapter: "Adapter", data: dict, chat_type: int, peer_uin: str
+    adapter: "Adapter", bot: BotInfo, data: dict, chat_type: int, peer_uin: str
 ) -> bytes:
     path = Path(data["path"])
     if path.exists():
@@ -95,7 +96,8 @@ async def _handle_image(
             return f.read()
     resp = await adapter.request(
         Request(
-            "GET", f"https://gchat.qpic.cn/gchatpic_new/0/0-0-{data['md5'].upper()}/0"
+            "GET",
+            f"https://gchat.qpic.cn/gchatpic_new/0/0-0-{data['md5'].upper()}/0"
         )
     )
     if resp.status_code == 200:
@@ -103,7 +105,8 @@ async def _handle_image(
     resp1 = await adapter.request(
         Request(
             "POST",
-            adapter.api_base / "message" / "fetchRichMedia",
+            adapter.api_base(bot.port) / "message" / "fetchRichMedia",
+            headers={"Authorization": f"Bearer {bot.token}"},
             json={
                 "msgId": data["_msg_id"],
                 "chatType": chat_type,
@@ -197,11 +200,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
 
     @staticmethod
     def market_face(
-        package_id: str,
-        emoji_id: str,
-        face_name: str,
-        key: str,
-        face_path: str
+        package_id: str, emoji_id: str, face_name: str, key: str, face_path: str
     ) -> "MessageSegment":
         log("WARNING", "market_face only can be received!")
         return MessageSegment(
@@ -222,6 +221,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
             "forward_msg",
             {"xml": xml, "id": id, "name": file_name},
         )
+
 
 class Message(BaseMessage[MessageSegment]):
     @classmethod
@@ -335,7 +335,7 @@ class Message(BaseMessage[MessageSegment]):
                             "fileUuid": video.fileUuid,
                             "fileSubId": video.fileSubId,
                             "fileBizId": video.fileBizId,
-                        }
+                        },
                     )
                 )
             if element.elementType == 6:
@@ -376,7 +376,7 @@ class Message(BaseMessage[MessageSegment]):
                             "key": market_face.key,
                             "static_path": market_face.staticFacePath,
                             "dynamic_path": market_face.dynamicFacePath,
-                        }
+                        },
                     )
                 )
             if element.elementType == 16:
@@ -390,13 +390,13 @@ class Message(BaseMessage[MessageSegment]):
                             "xml": forward_msg.xmlContent,
                             "id": forward_msg.resId,
                             "name": forward_msg.fileName,
-                        }
+                        },
                     )
                 )
         return msg
 
     async def export(
-        self, adapter: "Adapter", chat_type: int, peer_uin: str
+        self, adapter: "Adapter", bot: BotInfo, chat_type: int, peer_uin: str
     ) -> List[dict]:
         res = []
         for seg in self:
@@ -417,17 +417,18 @@ class Message(BaseMessage[MessageSegment]):
                 data = (
                     seg.data["file"]
                     if seg.data.get("file")
-                    else await _handle_image(adapter, seg.data, chat_type, peer_uin)
+                    else await _handle_image(
+                        adapter, bot, seg.data, chat_type, peer_uin
+                    )
                 )
                 resp: dict = json.loads(
                     (
                         await adapter.request(
                             Request(
                                 "POST",
-                                adapter.api_base / "upload",
+                                adapter.api_base(bot.port) / "upload",
                                 headers={
-                                    "Authorization":
-                                    f"Bearer {adapter.platform_config.token}",
+                                    "Authorization": f"Bearer {bot.token}",
                                 },
                                 files={"file_image": ("file_image", data)},
                             )
@@ -449,8 +450,9 @@ class Message(BaseMessage[MessageSegment]):
                     }
                 )
             elif seg.type == "file":
-                raise NotImplementedError("Unsupported MessageSegment type: "
-                                          f"{seg.type}")
+                raise NotImplementedError(
+                    "Unsupported MessageSegment type: " f"{seg.type}"
+                )
             elif seg.type == "voice":
                 data = _handle_audio(seg.data["file"])
                 print(data)
@@ -464,12 +466,13 @@ class Message(BaseMessage[MessageSegment]):
                             "filePath": data["filePath"],
                             "waveAmplitudes": [8, 0, 40, 0, 56, 0],
                             "duration": data["duration"],
-                        }
+                        },
                     }
                 )
             elif seg.type == "video":
-                raise NotImplementedError("Unsupported MessageSegment type: "
-                                          f"{seg.type}")
+                raise NotImplementedError(
+                    "Unsupported MessageSegment type: " f"{seg.type}"
+                )
             elif seg.type == "face":
                 res.append(
                     {
@@ -493,9 +496,11 @@ class Message(BaseMessage[MessageSegment]):
                     {"elementType": 10, "arkElement": {"bytesData": seg.data["data"]}}
                 )
             elif seg.type == "market_face":
-                raise NotImplementedError("Unsupported MessageSegment type: "
-                                          f"{seg.type}")
+                raise NotImplementedError(
+                    "Unsupported MessageSegment type: " f"{seg.type}"
+                )
             elif seg.type == "forward_msg":
-                raise NotImplementedError("Unsupported MessageSegment type: "
-                                          f"{seg.type}")
+                raise NotImplementedError(
+                    "Unsupported MessageSegment type: " f"{seg.type}"
+                )
         return res
