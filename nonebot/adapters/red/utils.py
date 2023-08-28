@@ -14,7 +14,11 @@ def handle_data(api: str, **data: Any) -> Tuple[str, str, Any]:
             {
                 "type": "message::send",
                 "payload": {
-                    "peer": {"chatType": data["chat_type"], "peerUin": data["target"], "guildId": None},
+                    "peer": {
+                        "chatType": data["chat_type"],
+                        "peerUin": data["target"],
+                        "guildId": None,
+                    },
                     "elements": data["elements"],
                 },
             },
@@ -71,7 +75,11 @@ def handle_data(api: str, **data: Any) -> Tuple[str, str, Any]:
             "POST",
             {
                 "msgIds": data["msg_ids"],
-                "peer": {"chatType": data["chat_type"], "peerUin": data["target"], "guildId": None}
+                "peer": {
+                    "chatType": data["chat_type"],
+                    "peerUin": data["target"],
+                    "guildId": None,
+                },
             },
         )
     if api == "get_history_messages":
@@ -79,7 +87,11 @@ def handle_data(api: str, **data: Any) -> Tuple[str, str, Any]:
             "message/getHistory",
             "POST",
             {
-                "peer": {"chatType": data["chat_type"], "peerUin": data["target"], "guildId": None},
+                "peer": {
+                    "chatType": data["chat_type"],
+                    "peerUin": data["target"],
+                    "guildId": None,
+                },
                 "offsetMsgId": data["offset_msg_id"],
                 "count": data["count"],
             },

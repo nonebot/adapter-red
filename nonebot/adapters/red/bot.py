@@ -1,5 +1,5 @@
-from typing import Any, Tuple, Union, Literal, List, Optional
 from typing_extensions import override
+from typing import Any, List, Tuple, Union, Literal, Optional
 
 from nonebot.message import handle_event
 
@@ -9,14 +9,15 @@ from nonebot.adapters import Adapter as BaseAdapter
 from .utils import log
 from .config import BotInfo
 from .event import Event, MessageEvent
+from .model import Group, Member, Profile
 from .message import Message, MessageSegment
-from .model import Profile, Group, Member
 
 
 def get_peer_data(event: Event, **kwargs: Any) -> Tuple[int, str]:
     if isinstance(event, MessageEvent):
         return event.chatType, event.peerUin or event.peerUid
     return kwargs["chatType"], kwargs["peerUin"]
+
 
 class Bot(BaseBot):
     """
@@ -107,9 +108,7 @@ class Bot(BaseBot):
         resp = await self.call_api("get_groups")
         return [Group.parse_obj(data) for data in resp]
 
-    async def mute_everyone(
-        self, group: int, enable: bool = True
-    ):
+    async def mute_everyone(self, group: int, enable: bool = True):
         await self.call_api("mute_everyone", group=group, enable=enable)
 
     async def kick(
@@ -173,14 +172,10 @@ class Bot(BaseBot):
             msg_ids=list(ids),
         )
 
-    async def recall_group_message(
-        self, group: int, *ids: str
-    ):
+    async def recall_group_message(self, group: int, *ids: str):
         await self.recall_message("group", group, *ids)
 
-    async def recall_friend_message(
-        self, friend: int, *ids: str
-    ):
+    async def recall_friend_message(self, friend: int, *ids: str):
         await self.recall_message("friend", friend, *ids)
 
     async def get_history_messages(

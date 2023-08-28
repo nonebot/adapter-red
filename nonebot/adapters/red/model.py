@@ -293,6 +293,7 @@ class Profile(BaseModel):
     svipFlag: bool
     vipLevel: int
 
+
 class Member(BaseModel):
     uid: str
     qid: str
@@ -305,6 +306,7 @@ class Member(BaseModel):
     avatarPath: str
     shutUpTime: int
     isDelete: bool
+
 
 class Group(BaseModel):
     groupCode: str

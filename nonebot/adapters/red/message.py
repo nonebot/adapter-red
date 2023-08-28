@@ -17,8 +17,8 @@ from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
 from .model import Element
-from .utils import log, is_amr
 from .config import BotInfo
+from .utils import log, is_amr
 
 if TYPE_CHECKING:
     from .adapter import Adapter
@@ -66,7 +66,7 @@ def _audio_trans(file: str, ffmpeg: str = "ffmpeg") -> bytes:
         return amr
     except subprocess.CalledProcessError as e:
         raise RuntimeError(
-            "音频转码到 amr 失败, 请确认你的 ffmpeg 可以处理此转换"
+            "音频转码到 amr 失败, 请确认你的 ffmpeg 可以处理此转换",
         ) from e
     finally:
         os.remove(tmpfile)
@@ -96,8 +96,7 @@ async def _handle_image(
             return f.read()
     resp = await adapter.request(
         Request(
-            "GET",
-            f"https://gchat.qpic.cn/gchatpic_new/0/0-0-{data['md5'].upper()}/0"
+            "GET", f"https://gchat.qpic.cn/gchatpic_new/0/0-0-{data['md5'].upper()}/0"
         )
     )
     if resp.status_code == 200:

@@ -1,6 +1,6 @@
 import json
 import asyncio
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union, Optional
 
 from yarl import URL
 from nonebot.typing import override
@@ -8,7 +8,6 @@ from nonebot.utils import escape_tag
 from nonebot.exception import WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
 
-from nonebot.adapters import Event as BaseEvent
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
@@ -163,7 +162,9 @@ class Adapter(BaseAdapter):
             return Event.parse_obj(payload)
 
     @override
-    async def _call_api(self, bot: Bot, api: str, **data: Any) -> Optional[Union[dict, bytes]]:
+    async def _call_api(
+        self, bot: Bot, api: str, **data: Any
+    ) -> Optional[Union[dict, bytes]]:
         log("DEBUG", f"Calling API <y>{api}</y>")  # 给予日志提示
         api, method, platform_data = handle_data(api, **data)
         if api == "send_message":
