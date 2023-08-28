@@ -145,10 +145,10 @@ class ArkElement(BaseModel):
 
 
 class MarketFaceElement(BaseModel):
-    itemType: Literal[6]
-    faceInfo: Literal[1]
+    itemType: int
+    faceInfo: int
     emojiPackageId: str
-    subType: Literal[3]
+    subType: int
     faceName: str
     emojiId: str
     key: str
