@@ -1,6 +1,6 @@
 import json
 import asyncio
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from yarl import URL
 from nonebot.typing import override
@@ -160,20 +160,18 @@ class Adapter(BaseAdapter):
             # 无法正常解析为具体 Event 时，给出日志提示
             log("WARNING", f"Parse event error {e!r}: {payload}")
             # 也可以尝试转为基础 Event 进行处理
-            return BaseEvent.parse_obj(payload)
+            return Event.parse_obj(payload)
 
     @override
-    async def _call_api(self, bot: Bot, api: str, **data: Any) -> Any:
+    async def _call_api(self, bot: Bot, api: str, **data: Any) -> Optional[Union[dict, bytes]]:
         log("DEBUG", f"Calling API <y>{api}</y>")  # 给予日志提示
-        method, platform_data = handle_data(api, **data)
+        api, method, platform_data = handle_data(api, **data)
         if api == "send_message":
             ws = self.wss[bot.info.port]
 
             # 以后red实现端支持send的http api了就删（
             await ws.send(json.dumps(platform_data))
             return
-
-        api = api.replace("_", "/", 1)  # message_recall -> message/recall
 
         # 采用 HTTP 请求的方式，需要构造一个 Request 对象
         request = Request(
@@ -183,5 +181,7 @@ class Adapter(BaseAdapter):
             content=json.dumps(platform_data),
             data=data,
         )
+        if api == "message/fetchRichMedia":
+            return (await self.request(request)).content
         # 发送请求，返回结果
-        return await self.request(request)
+        return json.loads((await self.request(request)).content)

@@ -1,4 +1,4 @@
-from typing import Any, List, Literal, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
@@ -23,7 +23,7 @@ class EmojiZplan(BaseModel):
     actionId: int
     actionName: str
     actionType: int
-    playerNumber: int
+    playerint: int
     peerUid: str
     bytesReserveInfo: str
 
@@ -262,3 +262,68 @@ class Message(BaseModel):
     clientSeq: str
     nameType: int
     avatarFlag: int
+
+
+class Profile(BaseModel):
+    uid: str
+    qid: str
+    uin: str
+    nick: str
+    remark: str
+    longNick: str
+    avatarUrl: str
+    birthday_year: int
+    birthday_month: int
+    birthday_day: int
+    sex: int
+    topTime: str
+    isBlock: bool
+    isMsgDisturb: bool
+    isSpecialCareOpen: bool
+    isSpecialCareZone: bool
+    ringId: str
+    status: int
+    extStatus: int
+    categoryId: int
+    onlyChat: bool
+    qzoneNotWatch: bool
+    qzoneNotWatched: bool
+    vipFlag: bool
+    yearVipFlag: bool
+    svipFlag: bool
+    vipLevel: int
+
+class Member(BaseModel):
+    uid: str
+    qid: str
+    uin: str
+    nick: str
+    remark: str
+    cardType: int
+    cardName: str
+    role: int
+    avatarPath: str
+    shutUpTime: int
+    isDelete: bool
+
+class Group(BaseModel):
+    groupCode: str
+    maxMember: int
+    memberCount: int
+    groupName: str
+    groupStatus: int
+    memberRole: int
+    isTop: bool
+    toppedTimestamp: str
+    privilegeFlag: int
+    isConf: bool
+    hasModifyConfGroupFace: bool
+    hasModifyConfGroupName: bool
+    remarkName: str
+    avatarUrl: str
+    hasMemo: bool
+    groupShutupExpireTime: str
+    personShutupExpireTime: str
+    discussToGroupUin: str
+    discussToGroupMaxMsgSeq: int
+    discussToGroupTime: int

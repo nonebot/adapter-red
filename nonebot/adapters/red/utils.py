@@ -1,62 +1,94 @@
 import struct
-from typing import Any
+from typing import Any, Tuple
 
 from nonebot.utils import logger_wrapper
 
 log = logger_wrapper("red")
 
 
-def handle_data(api: str, **data: Any):
+def handle_data(api: str, **data: Any) -> Tuple[str, str, Any]:
     if api == "send_message":
-        return "POST", {
-            "type": "message::send",
-            "payload": {
-                "peer": {"chatType": data["chatType"], "peerUin": data["peerUin"]},
-                "elements": data["element_data"],
+        return (
+            api,
+            "POST",
+            {
+                "type": "message::send",
+                "payload": {
+                    "peer": {"chatType": data["chat_type"], "peerUin": data["target"], "guildId": None},
+                    "elements": data["elements"],
+                },
             },
-        }
-    if api == "getSelfProfile":
-        return "GET", {}
-    if api == "bot/friends":
-        return "GET", {}
-    if api == "bot/groups":
-        return "GET", {}
-    if api == "group/muteEveryone":
-        return "POST", {"group": data["group"], "enable": data.get("enable", True)}
-    if api == "group/kick":
-        return "POST", {
-            "uidList": data["uidList"],
-            "group": data["group"],
-            "refuseForever": data.get("refuseForever", False),
-            "reason": data.get("reason", None),
-        }
-    if api == "group/getAnnouncements":
-        return "POST", {"group": data["group"]}
-    if api == "group/getMemberList":
-        return "POST", {"group": data["group"], "size": data.get("size", 20)}
-    if api == "message/fetchRichMedia":
-        return "POST", {
-            "msgId": data["msgId"],
-            "chatType": data["chatType"],
-            "peerUid": data["peerUid"],
-            "elementId": data["elementId"],
-            "thumbSize": data["thumbSize"],
-            "downloadType": data["downloadType"],
-        }
+        )
+    if api == "get_self_profile":
+        return "getSelfProfile", "GET", {}
+    if api == "get_friends":
+        return "bot/friends", "GET", {}
+    if api == "get_groups":
+        return "bot/groups", "GET", {}
+    if api == "mute_everyone":
+        return (
+            "group/muteEveryone",
+            "POST",
+            {"group": data["group"], "enable": data["enable"]},
+        )
+    if api == "kick":
+        return (
+            "group/kick",
+            "POST",
+            {
+                "uidList": data["members"],
+                "group": data["group"],
+                "refuseForever": data["refuse_forever"],
+                "reason": data["reason"],
+            },
+        )
+    if api == "get_announcements":
+        return "group/getAnnouncements", "POST", {"group": data["group"]}
+    if api == "get_members":
+        return (
+            "group/getMemberList",
+            "POST",
+            {"group": data["group"], "size": data["size"]},
+        )
+    if api == "fetch_media":
+        return (
+            "message/fetchRichMedia",
+            "POST",
+            {
+                "msgId": data["msg_id"],
+                "chatType": data["chat_type"],
+                "peerUid": data["target"],
+                "elementId": data["element_id"],
+                "thumbSize": data["thumb_size"],
+                "downloadType": data["download_type"],
+            },
+        )
     if api == "upload":
-        return "POST", data["file"]
-    if api == "message/recall":
-        return "POST", {"msgIds": data["msgIds"], "peer": data["peer"]}
-    if api == "message/getHistory":
-        return "POST", {
-            "peer": data["peer"],
-            "offsetMsgId": data.get("offsetMsgId", 0),
-            "count": data.get("count", 100),
-        }
+        return "upload", "POST", data["file"]
+    if api == "recall_message":
+        return (
+            "message/recall",
+            "POST",
+            {
+                "msgIds": data["msg_ids"],
+                "peer": {"chatType": data["chat_type"], "peerUin": data["target"], "guildId": None}
+            },
+        )
+    if api == "get_history_messages":
+        return (
+            "message/getHistory",
+            "POST",
+            {
+                "peer": {"chatType": data["chat_type"], "peerUin": data["target"], "guildId": None},
+                "offsetMsgId": data["offset_msg_id"],
+                "count": data["count"],
+            },
+        )
+    raise NotImplementedError(f"API {api} not implemented")
 
 
 def is_amr(data: bytes) -> bool:
     amr_nb_header = b"#!AMR\n"
     amr_wb_header = b"#!AMR-WB\n"
     header = struct.unpack("6s", data[:6])[0]
-    return header == amr_nb_header or header == amr_wb_header
+    return header in [amr_nb_header, amr_wb_header]
