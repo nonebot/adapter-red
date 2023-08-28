@@ -54,6 +54,7 @@ def handle_data(api: str, **data: Any):
             "count": data.get("count", 100),
         }
 
+
 def is_amr(data: bytes) -> bool:
     amr_nb_header = b"#!AMR\n"
     amr_wb_header = b"#!AMR-WB\n"
