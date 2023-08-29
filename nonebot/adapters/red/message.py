@@ -104,7 +104,7 @@ async def _handle_image(
     resp1 = await adapter.request(
         Request(
             "POST",
-            adapter.api_base(bot.port) / "message" / "fetchRichMedia",
+            bot.api_base / "message" / "fetchRichMedia",
             headers={"Authorization": f"Bearer {bot.token}"},
             json={
                 "msgId": data["_msg_id"],
@@ -425,7 +425,7 @@ class Message(BaseMessage[MessageSegment]):
                         await adapter.request(
                             Request(
                                 "POST",
-                                adapter.api_base(bot.port) / "upload",
+                                bot.api_base / "upload",
                                 headers={
                                     "Authorization": f"Bearer {bot.token}",
                                 },

@@ -36,7 +36,8 @@ RED_BOTS='
 [
   {
     "port": "xxx",
-    "token": "xxx"
+    "token": "xxx",
+    "host": "xxx"
   }
 ]
 '
@@ -46,3 +47,5 @@ RED_BOTS='
 
 `token` 被默认存储在 %AppData%/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN 或 ~/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN 中，
 首次启动 Chronocat 时会自动生成，并保持不变。
+
+`host` 为运行 QQNT 的设备主机，默认为 `localhost`。

@@ -2,12 +2,11 @@ import json
 import asyncio
 from typing import Any, Dict, List, Union, Optional
 
-from yarl import URL
+from packaging import version
 from nonebot.typing import override
 from nonebot.utils import escape_tag
 from nonebot.exception import WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
-from packaging import version
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
@@ -45,10 +44,6 @@ class Adapter(BaseAdapter):
         self.driver.on_startup(self.startup)
         self.driver.on_shutdown(self.shutdown)
 
-    @staticmethod
-    def api_base(port: int) -> URL:
-        return URL(f"http://localhost:{port}") / "api"
-
     async def startup(self) -> None:
         """定义启动时的操作，例如和平台建立连接"""
         for bot in self.red_config.red_bots:
@@ -61,7 +56,7 @@ class Adapter(BaseAdapter):
 
     async def _forward_ws(self, bot_info: BotInfo) -> None:
         bot: Optional[Bot] = None
-        ws_url = f"ws://localhost:{bot_info.port}/"
+        ws_url = f"ws://{bot_info.host}:{bot_info.port}/"
         req = Request("GET", ws_url, timeout=60.0)
         while True:
             try:
@@ -187,7 +182,7 @@ class Adapter(BaseAdapter):
         # 采用 HTTP 请求的方式，需要构造一个 Request 对象
         request = Request(
             method=method,  # 请求方法
-            url=self.api_base(bot.info.port) / api,  # 接口地址
+            url=bot.info.api_base / api,  # 接口地址
             headers={"Authorization": f"Bearer {bot.info.token}"},
             content=json.dumps(platform_data),
             data=data,
