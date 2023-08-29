@@ -7,7 +7,7 @@ from nonebot.typing import override
 from nonebot.utils import escape_tag
 from nonebot.exception import WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
-
+from packaging import version
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
@@ -24,6 +24,7 @@ class Adapter(BaseAdapter):
         self.red_config: Config = Config.parse_obj(self.config)
         self.tasks: List[asyncio.Task] = []  # 存储 ws 任务
         self.wss: Dict[int, WebSocket] = {}  # 存储 ws 连接
+        self.send_has_reply: bool = False
         self.setup()
 
     @classmethod
@@ -72,7 +73,7 @@ class Adapter(BaseAdapter):
                     )
                     connect_packet = {
                         "type": "meta::connect",
-                        "payload": {"token": bot.token},
+                        "payload": {"token": bot_info.token},
                     }
                     try:
                         await ws.send(json.dumps(connect_packet))
@@ -87,6 +88,9 @@ class Adapter(BaseAdapter):
                             f"RedProtocol Version: "
                             f"{connect_data['payload']['version']}",
                         )
+                        target = version.parse(connect_data["payload"]["version"])
+                        if target >= version.parse("0.0.38"):
+                            self.send_has_reply = True
                         self.wss[bot_info.port] = ws
                         await self._loop(bot, ws)
                     except WebSocketClosed as e:
@@ -120,9 +124,11 @@ class Adapter(BaseAdapter):
         while True:
             data = await ws.receive()
             json_data = json.loads(data)
+            if json_data["type"] == "message::send::reply":
+                continue
             try:
                 event = self.payload_to_event(json_data["payload"][0])
-            except IndexError:
+            except (IndexError, KeyError):
                 log(
                     "WARNING",
                     "Failed to get message payload. \n" f"{data}",
@@ -172,6 +178,10 @@ class Adapter(BaseAdapter):
 
             # 以后red实现端支持send的http api了就删（
             await ws.send(json.dumps(platform_data))
+            if self.send_has_reply:
+                resp = json.loads(await ws.receive())
+                if resp["type"] == "message::send::reply" and resp["payload"]["errMsg"]:
+                    log("ERROR", f"Send message failed: {resp['payload']['errMsg']}")
             return
 
         # 采用 HTTP 请求的方式，需要构造一个 Request 对象

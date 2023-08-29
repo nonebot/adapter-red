@@ -252,7 +252,7 @@ class Message(BaseModel):
     timeStamp: str
     isImportMsg: bool
     atType: int
-    roleType: int
+    roleType: Optional[int]
     fromChannelRoleInfo: RoleInfo
     fromGuildRoleInfo: RoleInfo
     levelRoleInfo: RoleInfo
