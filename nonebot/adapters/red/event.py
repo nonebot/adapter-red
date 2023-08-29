@@ -82,8 +82,11 @@ class PrivateMessageEvent(MessageEvent):
 
     @override
     def get_event_description(self) -> str:
-        text = f"收到好友 {self.senderUin} 的消息: {self.get_message()}"
-        return escape_tag(str(text))
+        text = (
+            f"Message from {self.sendNickName or self.senderUin or self.senderUid}: "
+            f"{self.get_message()}"
+        )
+        return escape_tag(text)
 
 
 class GroupMessageEvent(MessageEvent):
@@ -96,8 +99,8 @@ class GroupMessageEvent(MessageEvent):
     @override
     def get_event_description(self) -> str:
         text = (
-            f"收到群 {self.peerName} 内 "
-            f"{self.sendMemberName} 的消息: "
+            f"Message from {self.sendMemberName or self.senderUin or self.senderUid} "
+            f"in {self.peerName or self.peerUin or self.peerUid}: "
             f"{self.get_message()}"
         )
-        return escape_tag(str(text))
+        return escape_tag(text)

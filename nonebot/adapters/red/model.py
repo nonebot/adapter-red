@@ -23,7 +23,7 @@ class EmojiZplan(BaseModel):
     actionId: int
     actionName: str
     actionType: int
-    playerint: int
+    playerNumber: int
     peerUid: str
     bytesReserveInfo: str
 
