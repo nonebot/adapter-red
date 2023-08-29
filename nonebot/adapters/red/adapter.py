@@ -3,12 +3,11 @@ import asyncio
 from typing import Any, Dict, List, Union, Optional
 
 from yarl import URL
-from packaging import version
 from nonebot.typing import override
 from nonebot.utils import escape_tag
 from nonebot.exception import WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
-
+from packaging import version
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
