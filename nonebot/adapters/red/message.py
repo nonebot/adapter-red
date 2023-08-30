@@ -187,7 +187,11 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MessageSegment("face", {"face_id": face_id})
 
     @staticmethod
-    def reply(message_seq: str, message_id: Optional[str] = None, sender_uid: Optional[str] = None) -> "MessageSegment":
+    def reply(
+        message_seq: str,
+        message_id: Optional[str] = None,
+        sender_uid: Optional[str] = None,
+    ) -> "MessageSegment":
         return MessageSegment(
             "reply",
             {"msg_id": message_id, "msg_seq": message_seq, "sender_uid": sender_uid},
