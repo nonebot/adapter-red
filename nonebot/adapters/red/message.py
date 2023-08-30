@@ -187,7 +187,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MessageSegment("face", {"face_id": face_id})
 
     @staticmethod
-    def reply(message_id: str, message_seq: str, sender_uid: str) -> "MessageSegment":
+    def reply(message_seq: str, message_id: Optional[str] = None, sender_uid: Optional[str] = None) -> "MessageSegment":
         return MessageSegment(
             "reply",
             {"msg_id": message_id, "msg_seq": message_seq, "sender_uid": sender_uid},
@@ -454,7 +454,6 @@ class Message(BaseMessage[MessageSegment]):
                 )
             elif seg.type == "voice":
                 data = _handle_audio(seg.data["file"])
-                print(data)
                 res.append(
                     {
                         "elementType": 4,
