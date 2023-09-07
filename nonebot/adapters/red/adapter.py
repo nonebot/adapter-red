@@ -115,13 +115,6 @@ class Adapter(BaseAdapter):
         while True:
             data = await ws.receive()
             json_data = json.loads(data)
-            if json_data["type"] == "message::send::reply":
-                if json_data["payload"]["errMsg"]:
-                    log(
-                        "ERROR",
-                        f"Send message failed: {json_data['payload']['errMsg']}",
-                    )
-                continue
             try:
                 event = self.payload_to_event(json_data["payload"][0])
             except (IndexError, KeyError):
@@ -169,12 +162,6 @@ class Adapter(BaseAdapter):
     ) -> Optional[Union[dict, bytes]]:
         log("DEBUG", f"Calling API <y>{api}</y>")  # 给予日志提示
         api, method, platform_data = handle_data(api, **data)
-        if api == "send_message":
-            ws = self.wss[bot.info.port]
-
-            # 以后red实现端支持send的http api了就删（
-            await ws.send(json.dumps(platform_data))
-            return
 
         # 采用 HTTP 请求的方式，需要构造一个 Request 对象
         request = Request(
