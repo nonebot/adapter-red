@@ -7,9 +7,11 @@ from nonebot.adapters import Bot as BaseBot
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .utils import log
+from .model import Profile
 from .config import BotInfo
+from .model import Group, Member
 from .event import Event, MessageEvent
-from .model import Group, Member, Profile
+from .model import Message as MessageModel
 from .message import Message, MessageSegment
 
 
@@ -46,33 +48,34 @@ class Bot(BaseBot):
         chat_type: Literal["friend", "group"],
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
-    ) -> None:
+    ) -> MessageModel:
         chat = 1 if chat_type == "friend" else 2
         peer = str(target)
         element_data = await Message(message).export(
             self.adapter, self.info, chat, peer
         )
         log("DEBUG", "Trying to send a message")
-        await self.call_api(
+        resp = await self.call_api(
             "send_message",
             chat_type=chat,
             target=peer,
             elements=element_data,
         )
+        return MessageModel.parse_obj(resp["payload"])
 
     async def send_friend_message(
         self,
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
-    ) -> None:
-        await self.send_message("friend", target, message)
+    ) -> MessageModel:
+        return await self.send_message("friend", target, message)
 
     async def send_group_message(
         self,
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
-    ) -> None:
-        await self.send_message("group", target, message)
+    ) -> MessageModel:
+        return await self.send_message("group", target, message)
 
     @override
     async def send(
@@ -80,7 +83,7 @@ class Bot(BaseBot):
         event: Event,
         message: Union[str, Message, MessageSegment],
         **kwargs: Any,
-    ) -> None:
+    ) -> MessageModel:
         # 根据平台实现 Bot 回复事件的方法
 
         # 将消息处理为平台所需的格式后，调用发送消息接口进行发送，例如：
@@ -89,12 +92,13 @@ class Bot(BaseBot):
             self.adapter, self.info, chatType, peerUin
         )
         log("DEBUG", "Trying to send a message")
-        await self.call_api(
+        resp = await self.call_api(
             "send_message",
             chat_type=chatType,
             target=peerUin,
             elements=element_data,
         )
+        return MessageModel.parse_obj(resp["payload"])
 
     async def get_self_profile(self) -> Profile:
         resp = await self.call_api("get_self_profile")

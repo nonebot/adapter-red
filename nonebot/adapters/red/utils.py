@@ -9,7 +9,7 @@ log = logger_wrapper("red")
 def handle_data(api: str, **data: Any) -> Tuple[str, str, Any]:
     if api == "send_message":
         return (
-            api,
+            "message/send",
             "POST",
             {
                 "type": "message::send",
