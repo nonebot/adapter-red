@@ -1,5 +1,6 @@
+import re
 from typing_extensions import override
-from typing import Any, List, Tuple, Union, Literal, Optional
+from typing import Any, List, Tuple, Union, Optional
 
 from nonebot.message import handle_event
 
@@ -13,6 +14,71 @@ from .enums import ChatType
 from .event import Event, MessageEvent
 from .model import Message as MessageModel
 from .message import Message, MessageSegment
+
+
+def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
+    if event.chatType == ChatType.FRIEND:
+        event.to_me = True
+    else:
+        first_element = event.elements[0]
+        if (
+            first_element.elementType == 1
+            and first_element.textElement.atType == 2
+            and first_element.textElement.atNtUin == bot.self_id
+        ):
+            event.to_me = True
+            event.elements.pop(0)
+
+        # 处理at后的空格
+        if len(event.elements) >= 1:
+            second_element = event.elements[0]
+            if (
+                second_element.elementType == 1
+                and second_element.textElement.atType == 0
+                and not second_element.textElement.content.strip()
+            ):
+                event.elements.pop(0)
+
+        if not event.to_me:
+            i = -1
+            last_element = event.elements[i]
+            if (
+                last_element.elementType == 1
+                and last_element.textElement.atType == 0
+                and not last_element.textElement.content.strip()
+                and len(event.elements) >= 1
+            ):
+                # 处理at后的空格
+                i -= 1
+                last_element = event.elements[i]
+
+            if (
+                last_element.elementType == 1
+                and last_element.textElement.atType == 2
+                and last_element.textElement.atNtUin == bot.self_id
+            ):
+                event.to_me = True
+                event.elements.pop(i)
+
+
+def _check_nickname(bot: "Bot", event: MessageEvent) -> None:
+    element = event.elements[0]
+    if element.elementType != 1:
+        return
+
+    nicknames = {re.escape(n) for n in bot.config.nickname}
+    if not nicknames:
+        return
+
+    nickname_regex = "|".join(nicknames)
+    if element.textElement is not None and element.textElement.content:
+        if m := re.search(
+            rf"^({nickname_regex})([\s,，]*|$)",
+            element.textElement.content,
+            re.IGNORECASE,
+        ):
+            event.to_me = True
+            element.textElement.content = element.textElement.content[m.end() :]
 
 
 def get_peer_data(event: Event, **kwargs: Any) -> Tuple[int, str]:
@@ -36,11 +102,11 @@ class Bot(BaseBot):
         # 一些有关 Bot 的信息也可以在此定义和存储
 
     async def handle_event(self, event: Event):
-        # 根据需要，对事件进行某些预处理，例如：
-        # 检查事件是否和机器人有关操作，去除事件消息首尾的 @bot
-        # 检查事件是否有回复消息，调用平台 API 获取原始消息的消息内容
-        # 调用 handle_event 让 NoneBot 对事件进行处理
-        # TODO: 见上
+        # TODO: 检查事件是否有回复消息，调用平台 API 获取原始消息的消息内容
+        if isinstance(event, MessageEvent):
+            _check_at_me(self, event)
+            _check_nickname(self, event)
+
         await handle_event(self, event)
 
     async def send_message(
@@ -59,7 +125,7 @@ class Bot(BaseBot):
             target=peer,
             elements=element_data,
         )
-        return MessageModel.parse_obj(resp["payload"])
+        return MessageModel.parse_obj(resp)
 
     async def send_friend_message(
         self,
@@ -82,9 +148,6 @@ class Bot(BaseBot):
         message: Union[str, Message, MessageSegment],
         **kwargs: Any,
     ) -> MessageModel:
-        # 根据平台实现 Bot 回复事件的方法
-
-        # 将消息处理为平台所需的格式后，调用发送消息接口进行发送，例如：
         chatType, peerUin = get_peer_data(event, **kwargs)
         element_data = await Message(message).export(
             self.adapter, self.info, chatType, peerUin

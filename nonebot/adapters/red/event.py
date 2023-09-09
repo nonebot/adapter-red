@@ -1,10 +1,10 @@
-from typing import Literal
 from typing_extensions import override
 
 from nonebot.utils import escape_tag
 
 from nonebot.adapters import Event as BaseEvent
 
+from .enums import ChatType
 from .message import Message
 from .model import Message as MessageModel
 
@@ -38,11 +38,13 @@ class Event(BaseEvent):
 
     @override
     def is_tome(self) -> bool:
-        return False
+        raise ValueError("Event has no context!")
 
 
 class MessageEvent(Event, MessageModel):
     """消息事件"""
+
+    to_me: bool = False
 
     @override
     def get_type(self) -> str:
@@ -70,11 +72,13 @@ class MessageEvent(Event, MessageModel):
         # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
         return self.msgId
 
+    @override
+    def is_tome(self) -> bool:
+        return self.to_me
+
 
 class PrivateMessageEvent(MessageEvent):
     """好友消息事件"""
-
-    chatType: Literal[1]
 
     @override
     def get_event_name(self) -> str:
@@ -90,8 +94,6 @@ class PrivateMessageEvent(MessageEvent):
 
 
 class GroupMessageEvent(MessageEvent):
-    chatType: Literal[2]
-
     @override
     def get_event_name(self) -> str:
         return "message.group"
