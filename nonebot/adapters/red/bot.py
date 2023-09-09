@@ -6,10 +6,10 @@ from nonebot.message import handle_event
 from nonebot.adapters import Bot as BaseBot
 from nonebot.adapters import Adapter as BaseAdapter
 
-from .utils import log
 from .model import Profile
 from .config import BotInfo
 from .model import Group, Member
+from .enums import ChatType
 from .event import Event, MessageEvent
 from .model import Message as MessageModel
 from .message import Message, MessageSegment
@@ -45,19 +45,17 @@ class Bot(BaseBot):
 
     async def send_message(
         self,
-        chat_type: Literal["friend", "group"],
+        chat_type: ChatType,
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
     ) -> MessageModel:
-        chat = 1 if chat_type == "friend" else 2
         peer = str(target)
         element_data = await Message(message).export(
-            self.adapter, self.info, chat, peer
+            self.adapter, self.info, chat_type, peer
         )
-        log("DEBUG", "Trying to send a message")
         resp = await self.call_api(
             "send_message",
-            chat_type=chat,
+            chat_type=chat_type,
             target=peer,
             elements=element_data,
         )
@@ -68,14 +66,14 @@ class Bot(BaseBot):
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
     ) -> MessageModel:
-        return await self.send_message("friend", target, message)
+        return await self.send_message(ChatType.FRIEND, target, message)
 
     async def send_group_message(
         self,
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
     ) -> MessageModel:
-        return await self.send_message("group", target, message)
+        return await self.send_message(ChatType.GROUP, target, message)
 
     @override
     async def send(
@@ -91,14 +89,13 @@ class Bot(BaseBot):
         element_data = await Message(message).export(
             self.adapter, self.info, chatType, peerUin
         )
-        log("DEBUG", "Trying to send a message")
         resp = await self.call_api(
             "send_message",
             chat_type=chatType,
             target=peerUin,
             elements=element_data,
         )
-        return MessageModel.parse_obj(resp["payload"])
+        return MessageModel.parse_obj(resp)
 
     async def get_self_profile(self) -> Profile:
         resp = await self.call_api("get_self_profile")
@@ -140,18 +137,17 @@ class Bot(BaseBot):
     async def fetch_media(
         self,
         msg_id: str,
-        chat_type: Literal["friend", "group"],
+        chat_type: ChatType,
         target: Union[int, str],
         element_id: str,
         thumb_size: int = 0,
         download_type: int = 2,
     ) -> bytes:
-        chat = 1 if chat_type == "friend" else 2
         peer = str(target)
         return await self.call_api(
             "fetch_media",
             msg_id=msg_id,
-            chat_type=chat,
+            chat_type=chat_type,
             target=peer,
             element_id=element_id,
             thumb_size=thumb_size,
@@ -163,37 +159,35 @@ class Bot(BaseBot):
 
     async def recall_message(
         self,
-        chat_type: Literal["friend", "group"],
+        chat_type: ChatType,
         target: Union[int, str],
         *ids: str,
     ):
-        chat = 1 if chat_type == "friend" else 2
         peer = str(target)
         await self.call_api(
             "recall_message",
-            chat_type=chat,
+            chat_type=chat_type,
             target=peer,
             msg_ids=list(ids),
         )
 
     async def recall_group_message(self, group: int, *ids: str):
-        await self.recall_message("group", group, *ids)
+        await self.recall_message(ChatType.GROUP, group, *ids)
 
     async def recall_friend_message(self, friend: int, *ids: str):
-        await self.recall_message("friend", friend, *ids)
+        await self.recall_message(ChatType.FRIEND, friend, *ids)
 
     async def get_history_messages(
         self,
-        chat_type: Literal["friend", "group"],
+        chat_type: ChatType,
         target: Union[int, str],
         offset: int = 0,
         count: int = 100,
     ):
-        chat = 1 if chat_type == "friend" else 2
         peer = str(target)
         return await self.call_api(
             "get_history_messages",
-            chat_type=chat,
+            chat_type=chat_type,
             target=peer,
             offset=offset,
             count=count,

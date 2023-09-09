@@ -2,6 +2,8 @@ from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
+from .enums import ChatType
+
 
 class RoleInfo(BaseModel):
     roleId: str
@@ -217,7 +219,7 @@ class Message(BaseModel):
     msgRandom: str
     msgSeq: str
     cntSeq: str
-    chatType: int
+    chatType: ChatType
     msgType: int
     subMsgType: int
     sendType: int
