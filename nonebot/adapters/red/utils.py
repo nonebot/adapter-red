@@ -12,15 +12,12 @@ def handle_data(api: str, **data: Any) -> Tuple[str, str, Any]:
             "message/send",
             "POST",
             {
-                "type": "message::send",
-                "payload": {
-                    "peer": {
-                        "chatType": data["chat_type"],
-                        "peerUin": data["target"],
-                        "guildId": None,
-                    },
-                    "elements": data["elements"],
+                "peer": {
+                    "chatType": data["chat_type"],
+                    "peerUin": data["target"],
+                    "guildId": None,
                 },
+                "elements": data["elements"],
             },
         )
     if api == "get_self_profile":
