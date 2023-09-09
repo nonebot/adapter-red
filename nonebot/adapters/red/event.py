@@ -4,7 +4,6 @@ from nonebot.utils import escape_tag
 
 from nonebot.adapters import Event as BaseEvent
 
-from .enums import ChatType
 from .message import Message
 from .model import Message as MessageModel
 
