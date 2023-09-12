@@ -18,7 +18,7 @@ from .api.model import Message as MessageModel
 from .event import (
     Event,
     MemberAddEvent,
-    MemberMutedEvent,
+    MemberMuteEvent,
     GroupMessageEvent,
     PrivateMessageEvent,
     GroupNameUpdateEvent,
@@ -159,7 +159,7 @@ class Adapter(BaseAdapter):
                         and _data.elements[0].grayTipElement.groupElement
                         and _data.elements[0].grayTipElement.groupElement.type == 8
                     ):
-                        _handle_event(_data, MemberMutedEvent)
+                        _handle_event(_data, MemberMuteEvent)
                     elif (
                         _data.subMsgType == 8
                         and _data.elements[0].elementType == 8

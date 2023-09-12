@@ -250,13 +250,44 @@ class MemberAddEvent(NoticeEvent):
         return cls(**params)
 
 
-class MemberMutedEvent(NoticeEvent):
-    """群成员禁言事件"""
+class MemberMuteEvent(NoticeEvent):
+    """群成员禁言相关事件"""
 
     start: datetime
     duration: timedelta
     operator: ShutUpTarget
     member: ShutUpTarget
+
+    @override
+    def get_user_id(self) -> str:
+        return self.member.uin or self.member.uid
+
+    @classmethod
+    @override
+    def convert(cls, obj: Any):
+        assert isinstance(obj, MessageModel)
+        params = {
+            "msgId": obj.msgId,
+            "msgRandom": obj.msgRandom,
+            "msgSeq": obj.msgSeq,
+            "cntSeq": obj.cntSeq,
+            "chatType": obj.chatType,
+            "msgType": obj.msgType,
+            "subMsgType": obj.subMsgType,
+            "peerUid": obj.peerUid,
+            "peerUin": obj.peerUin,
+            "start": datetime.fromtimestamp(obj.elements[0].grayTipElement.groupElement.shutUp.curTime),  # type: ignore  # noqa: E501
+            "duration": timedelta(seconds=obj.elements[0].grayTipElement.groupElement.shutUp.duration),  # type: ignore  # noqa: E501
+            "operator": obj.elements[0].grayTipElement.groupElement.shutUp.admin,  # type: ignore  # noqa: E501
+            "member": obj.elements[0].grayTipElement.groupElement.shutUp.member,  # type: ignore  # noqa: E501
+        }
+        if params["duration"].total_seconds() < 1:
+            return MemberUnmuteEvent(**params)
+        return MemberMutedEvent(**params)
+
+
+class MemberMutedEvent(MemberMuteEvent):
+    """群成员被禁言事件"""
 
     @override
     def get_event_name(self) -> str:
@@ -270,26 +301,18 @@ class MemberMutedEvent(NoticeEvent):
         )
         return escape_tag(text)
 
-    @override
-    def get_user_id(self) -> str:
-        return self.member.uin or self.member.uid
 
-    @classmethod
+class MemberUnmuteEvent(MemberMuteEvent):
+    """群成员被解除禁言事件"""
+
     @override
-    def convert(cls, obj: Any):
-        assert isinstance(obj, MessageModel)
-        return cls(
-            msgId=obj.msgId,
-            msgRandom=obj.msgRandom,
-            msgSeq=obj.msgSeq,
-            cntSeq=obj.cntSeq,
-            chatType=obj.chatType,
-            msgType=obj.msgType,
-            subMsgType=obj.subMsgType,
-            peerUid=obj.peerUid,
-            peerUin=obj.peerUin,
-            start=datetime.fromtimestamp(obj.elements[0].grayTipElement.groupElement.shutUp.curTime),  # type: ignore  # noqa: E501
-            duration=timedelta(seconds=obj.elements[0].grayTipElement.groupElement.shutUp.duration),  # type: ignore  # noqa: E501
-            operator=ShutUpTarget.from_red(obj.elements[0].grayTipElement.groupElement.shutUp.admin),  # type: ignore  # noqa: E501
-            member=ShutUpTarget.from_red(obj.elements[0].grayTipElement.groupElement.shutUp.member),  # type: ignore  # noqa: E501
+    def get_event_name(self) -> str:
+        return "notice.member_unmute"
+
+    @override
+    def get_event_description(self) -> str:
+        text = (
+            f"Member {self.member.uin or self.member.uid} unmute in "
+            f"{self.peerUin or self.peerUid}"
         )
+        return escape_tag(text)
