@@ -1,4 +1,5 @@
-from typing import Any, Dict, Callable, Tuple
+from typing import Any, Dict, Tuple, Callable
+
 
 def _send_message(data: Dict[str, Any]) -> Tuple[str, str, dict]:
     return (
@@ -33,7 +34,9 @@ def _mute_member(data: Dict[str, Any]) -> Tuple[str, str, dict]:
         "POST",
         {
             "group": data["group"],
-            "memList": [{"uin": i, "timeStamp": data["duration"]} for i in data["members"]],
+            "memList": [
+                {"uin": i, "timeStamp": data["duration"]} for i in data["members"]
+            ],
         },
     )
 
@@ -48,12 +51,14 @@ def _unmute_member(data: Dict[str, Any]) -> Tuple[str, str, dict]:
         },
     )
 
+
 def _mute_everyone(data: Dict[str, Any]) -> Tuple[str, str, dict]:
     return (
         "group/muteEveryone",
         "POST",
         {"group": data["group"], "enable": True},
     )
+
 
 def _unmute_everyone(data: Dict[str, Any]) -> Tuple[str, str, dict]:
     return (

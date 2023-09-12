@@ -1,6 +1,6 @@
 import json
 import asyncio
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, List, Type, Union, Optional
 
 from nonebot.typing import override
 from nonebot.utils import escape_tag
@@ -11,9 +11,18 @@ from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
 from .utils import log
+from .api.model import MsgType
 from .api.handle import HANDLERS
 from .config import Config, BotInfo
-from .event import Event, GroupMessageEvent, PrivateMessageEvent
+from .api.model import Message as MessageModel
+from .event import (
+    Event,
+    MemberAddEvent,
+    MemberMutedEvent,
+    GroupMessageEvent,
+    PrivateMessageEvent,
+    GroupNameUpdateEvent,
+)
 
 
 class Adapter(BaseAdapter):
@@ -113,46 +122,81 @@ class Adapter(BaseAdapter):
         while True:
             data = await ws.receive()
             json_data = json.loads(data)
-            try:
-                event = self.payload_to_event(json_data["payload"][0])
-            except (IndexError, KeyError):
-                log(
-                    "WARNING",
-                    "Failed to get message payload. \n" f"{data}",
-                )
+            _event_type = json_data["type"]
+            if not json_data["payload"]:
+                log("WARNING", f"received empty event {_event_type}")
+                continue
+
+            def _handle_event(event_data: Any, target: Type[Event]):
+                try:
+                    event = target.convert(event_data)
+                except Exception as e:
+                    log(
+                        "WARNING",
+                        f"Failed to parse event data: {event_data}",
+                        e,
+                    )
+                else:
+                    asyncio.create_task(bot.handle_event(event))
+
+            def _handle_message(message: dict):
+                _data = MessageModel.parse_obj(message)
+                if _data.msgType == MsgType.system and _data.sendType == 3:
+                    if (
+                        _data.subMsgType == 8
+                        and _data.elements[0].elementType == 8
+                        and _data.elements[0].grayTipElement
+                        and _data.elements[0].grayTipElement.subElementType == 4
+                        and _data.elements[0].grayTipElement.groupElement
+                        and _data.elements[0].grayTipElement.groupElement.type == 1
+                    ):
+                        _handle_event(_data, MemberAddEvent)
+                    elif (
+                        _data.subMsgType == 8
+                        and _data.elements[0].elementType == 8
+                        and _data.elements[0].grayTipElement
+                        and _data.elements[0].grayTipElement.subElementType == 4
+                        and _data.elements[0].grayTipElement.groupElement
+                        and _data.elements[0].grayTipElement.groupElement.type == 8
+                    ):
+                        _handle_event(_data, MemberMutedEvent)
+                    elif (
+                        _data.subMsgType == 8
+                        and _data.elements[0].elementType == 8
+                        and _data.elements[0].grayTipElement
+                        and _data.elements[0].grayTipElement.subElementType == 4
+                        and _data.elements[0].grayTipElement.groupElement
+                        and _data.elements[0].grayTipElement.groupElement.type == 5
+                    ):
+                        _handle_event(_data, GroupNameUpdateEvent)
+                    elif (
+                        _data.subMsgType == 12
+                        and _data.elements[0].elementType == 8
+                        and _data.elements[0].grayTipElement
+                        and _data.elements[0].grayTipElement.subElementType == 12
+                        and _data.elements[0].grayTipElement.xmlElement
+                        and _data.elements[0].grayTipElement.xmlElement.busiType == "1"
+                        and _data.elements[0].grayTipElement.xmlElement.busiId
+                        == "10145"
+                    ):
+                        _handle_event(_data, MemberAddEvent)
+                    else:
+                        log("WARNING", f"received unsupported event: {message}")
+                        return
+                else:
+                    if _data.chatType == 1:
+                        _handle_event(_data, PrivateMessageEvent)
+                    elif _data.chatType == 2:
+                        _handle_event(_data, GroupMessageEvent)
+                    else:
+                        log("WARNING", f"received unsupported event: {message}")
+                        return
+
+            if _event_type == "message::recv":
+                for msg in json_data["payload"]:
+                    _handle_message(msg)
             else:
-                asyncio.create_task(bot.handle_event(event))
-
-    @classmethod
-    def parse_obj(cls, obj: dict):
-        chat_type_parser = {
-            1: PrivateMessageEvent.parse_obj,
-            2: GroupMessageEvent.parse_obj,
-        }
-
-        try:
-            parse_func = chat_type_parser.get(obj["chatType"], Event.parse_obj)
-        except KeyError:
-            parse_func = Event.parse_obj
-
-        return parse_func(obj)
-
-    @classmethod
-    def payload_to_event(cls, payload: Dict[str, Any]) -> Event:
-        """根据平台事件的特性，转换平台 payload 为具体 Event
-
-
-        Event 模型继承自 pydantic.BaseModel，具体请参考 pydantic 文档
-        """
-
-        # 做一层异常处理，以应对平台事件数据的变更
-        try:
-            return cls.parse_obj(payload)
-        except Exception as e:
-            # 无法正常解析为具体 Event 时，给出日志提示
-            log("WARNING", f"Parse event error {e!r}: {payload}")
-            # 也可以尝试转为基础 Event 进行处理
-            return Event.parse_obj(payload)
+                _handle_event(json_data["payload"], Event)
 
     @override
     async def _call_api(

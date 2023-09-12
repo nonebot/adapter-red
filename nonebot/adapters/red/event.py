@@ -1,4 +1,7 @@
+import re
+from typing import Any, Optional
 from typing_extensions import override
+from datetime import datetime, timedelta
 
 from nonebot.utils import escape_tag
 
@@ -6,6 +9,7 @@ from nonebot.adapters import Event as BaseEvent
 
 from .message import Message
 from .api.model import Message as MessageModel
+from .api.model import MsgType, ChatType, ShutUpTarget
 
 
 class Event(BaseEvent):
@@ -39,6 +43,14 @@ class Event(BaseEvent):
     def is_tome(self) -> bool:
         raise ValueError("Event has no context!")
 
+    @classmethod
+    def convert(cls, obj: Any):
+        """将 Red API 返回的数据转换为对应的 Model 类
+
+        子类可根据需要重写此方法
+        """
+        return cls.parse_obj(obj)
+
 
 class MessageEvent(Event, MessageModel):
     """消息事件"""
@@ -57,7 +69,11 @@ class MessageEvent(Event, MessageModel):
     @override
     def get_message(self) -> Message:
         # 获取事件消息的方法，根据事件具体实现，如果事件非消息类型事件，则抛出异常
-        return Message.from_red_message(self.elements, self.msgId)
+        if not hasattr(self, "_message"):
+            setattr(
+                self, "_message", Message.from_red_message(self.elements, self.msgId)
+            )
+        return getattr(self, "_message")
 
     @override
     def get_user_id(self) -> str:
@@ -105,3 +121,175 @@ class GroupMessageEvent(MessageEvent):
             f"{self.get_message()}"
         )
         return escape_tag(text)
+
+
+class NoticeEvent(Event):
+    msgId: str
+    msgRandom: str
+    msgSeq: str
+    cntSeq: str
+    chatType: ChatType
+    msgType: MsgType
+    subMsgType: int
+    peerUid: str
+    peerUin: Optional[str]
+
+    @override
+    def get_type(self) -> str:
+        return "notice"
+
+    @override
+    def get_event_name(self) -> str:
+        return "notice"
+
+    @override
+    def get_session_id(self) -> str:
+        # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
+        return self.msgId
+
+    class Config:
+        extra = "ignore"
+
+
+class GroupNameUpdateEvent(NoticeEvent):
+    """群名变更事件"""
+
+    currentName: str
+    operatorUid: str
+    operatorName: str
+
+    @override
+    def get_event_name(self) -> str:
+        return "notice.group_name_update"
+
+    @override
+    def get_event_description(self) -> str:
+        text = (
+            f"Group {self.peerUin or self.peerUid} name updated to {self.currentName}"
+        )
+        return escape_tag(text)
+
+    @override
+    def get_user_id(self) -> str:
+        # 获取用户 ID 的方法，根据事件具体实现，如果事件没有用户 ID，则抛出异常
+        if self.operatorUid is None:
+            raise ValueError("user_id doesn't exist.")
+        return self.operatorUid
+
+    @classmethod
+    @override
+    def convert(cls, obj: Any):
+        assert isinstance(obj, MessageModel)
+        return cls(
+            msgId=obj.msgId,
+            msgRandom=obj.msgRandom,
+            msgSeq=obj.msgSeq,
+            cntSeq=obj.cntSeq,
+            chatType=obj.chatType,
+            msgType=obj.msgType,
+            subMsgType=obj.subMsgType,
+            peerUid=obj.peerUid,
+            peerUin=obj.peerUin,
+            currentName=obj.elements[0].grayTipElement.groupElement.groupName,  # type: ignore  # noqa: E501
+            operatorUid=obj.elements[0].grayTipElement.groupElement.memberUin,  # type: ignore  # noqa: E501
+            operatorName=obj.elements[0].grayTipElement.groupElement.memberNick,  # type: ignore  # noqa: E501
+        )
+
+
+class MemberAddEvent(NoticeEvent):
+    """群成员增加事件"""
+
+    memberUid: str
+    operatorUid: str
+    memberName: Optional[str]
+
+    @override
+    def get_event_name(self) -> str:
+        return "notice.member_add"
+
+    @override
+    def get_event_description(self) -> str:
+        text = (
+            f"Member {f'{self.memberName}({self.memberUid})' if self.memberName else self.memberUid} added to "  # noqa: E501
+            f"{self.peerUin or self.peerUid}"
+        )
+        return escape_tag(text)
+
+    @override
+    def get_user_id(self) -> str:
+        return self.memberUid
+
+    legacy_invite_message = re.compile(
+        r'jp="(\d+)".*jp="(\d+)"', re.DOTALL | re.MULTILINE | re.IGNORECASE
+    )
+
+    @classmethod
+    @override
+    def convert(cls, obj: Any):
+        assert isinstance(obj, MessageModel)
+        params = {
+            "msgId": obj.msgId,
+            "msgRandom": obj.msgRandom,
+            "msgSeq": obj.msgSeq,
+            "cntSeq": obj.cntSeq,
+            "chatType": obj.chatType,
+            "msgType": obj.msgType,
+            "subMsgType": obj.subMsgType,
+            "peerUid": obj.peerUid,
+            "peerUin": obj.peerUin,
+        }
+        if obj.elements[0].grayTipElement.xmlElement:  # type: ignore
+            if not (mat := cls.legacy_invite_message.match(obj.elements[0].grayTipElement.xmlElement.content)):  # type: ignore  # noqa: E501
+                raise ValueError("Invalid legacy invite message.")
+            params["operatorUid"] = mat[1]
+            params["memberUid"] = mat[2]
+        else:
+            params["memberUid"] = obj.elements[0].grayTipElement.groupElement.memberUin  # type: ignore  # noqa: E501
+            params["operatorUid"] = obj.elements[0].grayTipElement.groupElement.operatorUin  # type: ignore  # noqa: E501
+            params["memberName"] = obj.elements[0].grayTipElement.groupElement.memberNick  # type: ignore  # noqa: E501
+        return cls(**params)
+
+
+class MemberMutedEvent(NoticeEvent):
+    """群成员禁言事件"""
+
+    start: datetime
+    duration: timedelta
+    operator: ShutUpTarget
+    member: ShutUpTarget
+
+    @override
+    def get_event_name(self) -> str:
+        return "notice.member_muted"
+
+    @override
+    def get_event_description(self) -> str:
+        text = (
+            f"Member {self.member.uin or self.member.uid} muted in "
+            f"{self.peerUin or self.peerUid} for {self.duration}"
+        )
+        return escape_tag(text)
+
+    @override
+    def get_user_id(self) -> str:
+        return self.member.uin or self.member.uid
+
+    @classmethod
+    @override
+    def convert(cls, obj: Any):
+        assert isinstance(obj, MessageModel)
+        return cls(
+            msgId=obj.msgId,
+            msgRandom=obj.msgRandom,
+            msgSeq=obj.msgSeq,
+            cntSeq=obj.cntSeq,
+            chatType=obj.chatType,
+            msgType=obj.msgType,
+            subMsgType=obj.subMsgType,
+            peerUid=obj.peerUid,
+            peerUin=obj.peerUin,
+            start=datetime.fromtimestamp(obj.elements[0].grayTipElement.groupElement.shutUp.curTime),  # type: ignore  # noqa: E501
+            duration=timedelta(seconds=obj.elements[0].grayTipElement.groupElement.shutUp.duration),  # type: ignore  # noqa: E501
+            operator=ShutUpTarget.from_red(obj.elements[0].grayTipElement.groupElement.shutUp.admin),  # type: ignore  # noqa: E501
+            member=ShutUpTarget.from_red(obj.elements[0].grayTipElement.groupElement.shutUp.member),  # type: ignore  # noqa: E501
+        )

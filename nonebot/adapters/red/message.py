@@ -16,8 +16,8 @@ from nonebot.internal.driver import Request
 from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
-from .api.model import Element
 from .config import BotInfo
+from .api.model import Element
 from .utils import log, is_amr
 
 if TYPE_CHECKING:

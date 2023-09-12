@@ -1,8 +1,7 @@
+from enum import IntEnum
 from typing import Any, List, Optional
 
 from pydantic import BaseModel
-
-from enum import IntEnum
 
 
 class ChatType(IntEnum):
@@ -40,6 +39,7 @@ class OtherAdd(BaseModel):
     name: Optional[str]
     uin: Optional[str]
 
+
 class MemberAdd(BaseModel):
     showType: int
     otherAdd: Optional[OtherAdd]
@@ -50,6 +50,7 @@ class MemberAdd(BaseModel):
     otherInviteYou: Optional[Any]
     youInviteOther: Optional[Any]
 
+
 class ShutUpTarget(BaseModel):
     uid: str
     card: str
@@ -57,9 +58,10 @@ class ShutUpTarget(BaseModel):
     role: int
     uin: str
 
+
 class ShutUp(BaseModel):
-    curTime: str
-    duration: str
+    curTime: int
+    duration: int
     admin: ShutUpTarget
     member: ShutUpTarget
 
@@ -284,13 +286,26 @@ class Element(BaseModel):
     yoloGameResultElement: Optional[dict]
 
 
+class MsgType(IntEnum):
+    normal = 2
+    may_file = 3
+    system = 5
+    voice = 6
+    video = 7
+    value8 = 8
+    reply = 9
+    wallet = 10
+    ark = 11
+    may_market = 17
+
+
 class Message(BaseModel):
     msgId: str
     msgRandom: str
     msgSeq: str
     cntSeq: str
     chatType: ChatType
-    msgType: int
+    msgType: MsgType
     subMsgType: int
     sendType: int
     senderUid: str
