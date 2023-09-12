@@ -1,4 +1,5 @@
 import re
+from datetime import timedelta
 from typing_extensions import override
 from typing import Any, List, Tuple, Union, Optional
 
@@ -7,13 +8,12 @@ from nonebot.message import handle_event
 from nonebot.adapters import Bot as BaseBot
 from nonebot.adapters import Adapter as BaseAdapter
 
-from .model import Profile
 from .config import BotInfo
-from .model import Group, Member
-from .enums import ChatType
+from .api.model import Group, Member
 from .event import Event, MessageEvent
-from .model import Message as MessageModel
+from .api.model import Profile, ChatType
 from .message import Message, MessageSegment
+from .api.model import Message as MessageModel
 
 
 def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
@@ -172,8 +172,24 @@ class Bot(BaseBot):
         resp = await self.call_api("get_groups")
         return [Group.parse_obj(data) for data in resp]
 
-    async def mute_everyone(self, group: int, enable: bool = True):
-        await self.call_api("mute_everyone", group=group, enable=enable)
+    async def mute_member(
+        self, group: int, *members: int, duration: Union[int, timedelta] = 60
+    ):
+        if isinstance(duration, timedelta):
+            duration = int(duration.total_seconds())
+        duration = max(60, min(2592000, duration))
+        await self.call_api(
+            "mute_member", group=group, members=list(members), duration=duration
+        )
+
+    async def unmute_member(self, group: int, *members: int):
+        await self.call_api("unmute_member", group=group, members=list(members))
+
+    async def mute_everyone(self, group: int):
+        await self.call_api("mute_everyone", group=group)
+
+    async def unmute_everyone(self, group: int):
+        await self.call_api("unmute_everyone", group=group)
 
     async def kick(
         self,

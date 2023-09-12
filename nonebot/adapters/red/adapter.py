@@ -10,8 +10,9 @@ from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
+from .utils import log
+from .api.handle import HANDLERS
 from .config import Config, BotInfo
-from .utils import log, handle_data
 from .event import Event, GroupMessageEvent, PrivateMessageEvent
 
 
@@ -158,14 +159,16 @@ class Adapter(BaseAdapter):
         self, bot: Bot, api: str, **data: Any
     ) -> Optional[Union[dict, bytes]]:
         log("DEBUG", f"Calling API <y>{api}</y>")  # 给予日志提示
-        api, method, platform_data = handle_data(api, **data)
+        if not (handler := HANDLERS.get(api)):
+            raise NotImplementedError(f"API {api} not implemented")
+        api, method, platform_data = handler(data)
         # 采用 HTTP 请求的方式，需要构造一个 Request 对象
         request = Request(
             method=method,  # 请求方法
             url=bot.info.api_base / api,  # 接口地址
             headers={"Authorization": f"Bearer {bot.info.token}"},
             content=json.dumps(platform_data),
-            data=data,
+            data=platform_data,
         )
         if api == "message/fetchRichMedia":
             return (await self.request(request)).content

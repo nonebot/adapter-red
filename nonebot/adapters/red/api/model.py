@@ -2,7 +2,12 @@ from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
-from .enums import ChatType
+from enum import IntEnum
+
+
+class ChatType(IntEnum):
+    FRIEND = 1
+    GROUP = 2
 
 
 class RoleInfo(BaseModel):
@@ -30,18 +35,64 @@ class EmojiZplan(BaseModel):
     bytesReserveInfo: str
 
 
-class XMLElement(BaseModel):
-    busiType: str
-    busiId: str
+class OtherAdd(BaseModel):
+    uid: Optional[str]
+    name: Optional[str]
+    uin: Optional[str]
+
+class MemberAdd(BaseModel):
+    showType: int
+    otherAdd: Optional[OtherAdd]
+    otherAddByOtherQRCode: Optional[Any]
+    otherAddByYourQRCode: Optional[Any]
+    youAddByOtherQRCode: Optional[Any]
+    otherInviteOther: Optional[Any]
+    otherInviteYou: Optional[Any]
+    youInviteOther: Optional[Any]
+
+class ShutUpTarget(BaseModel):
+    uid: str
+    card: str
+    name: str
+    role: int
+    uin: str
+
+class ShutUp(BaseModel):
+    curTime: str
+    duration: str
+    admin: ShutUpTarget
+    member: ShutUpTarget
+
+
+class GroupElement(BaseModel):
+    type: int
+    role: int
+    groupName: Optional[str]
+    memberUid: Optional[str]
+    memberNick: Optional[str]
+    memberRemark: Optional[str]
+    adminUid: Optional[str]
+    adminNick: Optional[str]
+    adminRemark: Optional[str]
+    createGroup: Optional[Any]
+    memberAdd: Optional[MemberAdd]
+    shutUp: Optional[ShutUp]
+    memberUin: Optional[str]
+    adminUin: Optional[str]
+
+
+class XmlElement(BaseModel):
+    busiType: Optional[str]
+    busiId: Optional[str]
     c2cType: int
     serviceType: int
     ctrlFlag: int
-    content: str
-    templId: str
-    seqId: str
-    templParam: Any
-    pbReserv: str
-    members: Any
+    content: Optional[str]
+    templId: Optional[str]
+    seqId: Optional[str]
+    templParam: Optional[Any]
+    pbReserv: Optional[str]
+    members: Optional[Any]
 
 
 class TextElement(BaseModel):
@@ -187,6 +238,25 @@ class VideoElement(BaseModel):
     fileBizId: Optional[str]
 
 
+class GrayTipElement(BaseModel):
+    subElementType: Optional[int]
+    revokeElement: Optional[dict]
+    proclamationElement: Optional[dict]
+    emojiReplyElement: Optional[dict]
+    groupElement: Optional[GroupElement]
+    buddyElement: Optional[dict]
+    feedMsgElement: Optional[dict]
+    essenceElement: Optional[dict]
+    groupNotifyElement: Optional[dict]
+    buddyNotifyElement: Optional[dict]
+    xmlElement: Optional[XmlElement]
+    fileReceiptElement: Optional[dict]
+    localGrayTipElement: Optional[dict]
+    blockGrayTipElement: Optional[dict]
+    aioOpGrayTipElement: Optional[dict]
+    jsonGrayTipElement: Optional[dict]
+
+
 class Element(BaseModel):
     elementType: int
     elementId: Optional[str]
@@ -199,7 +269,7 @@ class Element(BaseModel):
     faceElement: Optional[FaceElement]
     fileElement: Optional[FileElement]
     giphyElement: Optional[dict]
-    grayTipElement: Optional[dict]
+    grayTipElement: Optional[GrayTipElement]
     inlineKeyboardElement: Optional[dict]
     liveGiftElement: Optional[dict]
     markdownElement: Optional[dict]

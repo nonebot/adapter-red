@@ -16,7 +16,7 @@ from nonebot.internal.driver import Request
 from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
-from .model import Element
+from .api.model import Element
 from .config import BotInfo
 from .utils import log, is_amr
 
@@ -319,25 +319,27 @@ class Message(BaseMessage[MessageSegment]):
                     MessageSegment(
                         "video",
                         {
-                            "filePath": video.filePath,
-                            "fileName": video.fileName,
-                            "videoMd5": video.videoMd5,
-                            "thumbMd5": video.thumbMd5,
-                            "fileTime": video.fileTime,
-                            "thumbSize": video.thumbSize,
-                            "fileFormat": video.fileFormat,
-                            "fileSize": video.fileSize,
-                            "thumbWidth": video.thumbWidth,
-                            "thumbHeight": video.thumbHeight,
+                            "id": element.elementId,
+                            "path": video.filePath,
+                            "name": video.fileName,
+                            "md5": video.videoMd5,
+                            "format": video.fileFormat,
+                            "time": video.fileTime,
+                            "size": video.fileSize,
+                            "uuid": video.fileUuid,
+                            "thumb_md5": video.thumbMd5,
+                            "thumb_size": video.thumbSize,
+                            "thumb_width": video.thumbWidth,
+                            "thumb_height": video.thumbHeight,
+                            "thumb_path": video.thumbPath,
                             "busiType": video.busiType,
                             "subBusiType": video.subBusiType,
-                            "thumbPath": video.thumbPath,
                             "transferStatus": video.transferStatus,
                             "progress": video.progress,
                             "invalidState": video.invalidState,
-                            "fileUuid": video.fileUuid,
                             "fileSubId": video.fileSubId,
                             "fileBizId": video.fileBizId,
+                            "_msg_id": msg_id,
                         },
                     )
                 )

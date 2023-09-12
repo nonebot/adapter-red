@@ -5,7 +5,7 @@ from nonebot.utils import escape_tag
 from nonebot.adapters import Event as BaseEvent
 
 from .message import Message
-from .model import Message as MessageModel
+from .api.model import Message as MessageModel
 
 
 class Event(BaseEvent):
