@@ -71,7 +71,14 @@ class MessageEvent(Event, MessageModel):
         # 获取事件消息的方法，根据事件具体实现，如果事件非消息类型事件，则抛出异常
         if not hasattr(self, "_message"):
             setattr(
-                self, "_message", Message.from_red_message(self.elements, self.msgId)
+                self,
+                "_message",
+                Message.from_red_message(
+                    self.elements,
+                    self.msgId,  # type: ignore
+                    self.chatType,  # type: ignore
+                    self.peerUin or self.peerUid,  # type: ignore
+                ),
             )
         return getattr(self, "_message")
 

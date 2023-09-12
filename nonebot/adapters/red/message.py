@@ -2,12 +2,15 @@ import os
 import re
 import json
 import uuid
+import random
 import hashlib
 import tempfile
 import subprocess
 from io import BytesIO
 from pathlib import Path
+from datetime import datetime
 from typing_extensions import override
+from dataclasses import field, dataclass
 from typing import TYPE_CHECKING, Dict, List, Type, Union, Iterable, Optional
 
 from nonebot.exception import NetworkError
@@ -87,40 +90,6 @@ def _get_duration(file: str, ffmpeg: str = "ffmpeg") -> int:
     return int(int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2]))
 
 
-async def _handle_image(
-    adapter: "Adapter", bot: BotInfo, data: dict, chat_type: int, peer_uin: str
-) -> bytes:
-    path = Path(data["path"])
-    if path.exists():
-        with path.open("rb") as f:
-            return f.read()
-    resp = await adapter.request(
-        Request(
-            "GET", f"https://gchat.qpic.cn/gchatpic_new/0/0-0-{data['md5'].upper()}/0"
-        )
-    )
-    if resp.status_code == 200:
-        return resp.content
-    resp1 = await adapter.request(
-        Request(
-            "POST",
-            bot.api_base / "message" / "fetchRichMedia",
-            headers={"Authorization": f"Bearer {bot.token}"},
-            json={
-                "msgId": data["_msg_id"],
-                "chatType": chat_type,
-                "peerUid": peer_uin,
-                "elementId": data["id"],
-                "thumbSize": 0,
-                "downloadType": 2,
-            },
-        )
-    )
-    if resp1.status_code == 200:
-        return resp1.content
-    raise NetworkError("red", resp1)
-
-
 class MessageSegment(BaseMessageSegment["Message"]):
     @classmethod
     @override
@@ -156,7 +125,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
             file = file.getvalue()
-        return MessageSegment("image", {"file": file})
+        return MediaMessageSegment("image", {"file": file})
 
     @staticmethod
     def file(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
@@ -164,7 +133,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
             file = file.getvalue()
-        return MessageSegment("file", {"file": file})
+        return MediaMessageSegment("file", {"file": file})
 
     @staticmethod
     def voice(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
@@ -172,7 +141,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
             file = file.getvalue()
-        return MessageSegment("voice", {"file": file})
+        return MediaMessageSegment("voice", {"file": file})
 
     @staticmethod
     def video(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
@@ -180,7 +149,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
             file = file.getvalue()
-        return MessageSegment("video", {"file": file})
+        return MediaMessageSegment("video", {"file": file})
 
     @staticmethod
     def face(face_id: str) -> "MessageSegment":
@@ -226,6 +195,62 @@ class MessageSegment(BaseMessageSegment["Message"]):
         )
 
 
+class MediaMessageSegment(MessageSegment):
+    async def download(self, adapter: "Adapter", bot: BotInfo) -> bytes:
+        path = Path(self.data["path"])
+        if path.exists():
+            with path.open("rb") as f:
+                return f.read()
+        if self.type == "image":
+            resp = await adapter.request(
+                Request(
+                    "GET",
+                    f"https://gchat.qpic.cn/gchatpic_new/0/0-0-{self.data['md5'].upper()}/0",
+                )
+            )
+            if resp.status_code == 200:
+                return resp.content
+        resp1 = await adapter.request(
+            Request(
+                "POST",
+                bot.api_base / "message" / "fetchRichMedia",
+                headers={"Authorization": f"Bearer {bot.token}"},
+                json={
+                    "msgId": self.data["_msg_id"],
+                    "chatType": self.data["_chat_type"],
+                    "peerUid": self.data["_peer_uin"],
+                    "elementId": self.data["id"],
+                    "thumbSize": 0,
+                    "downloadType": 2,
+                },
+            )
+        )
+        if resp1.status_code == 200:
+            return resp1.content
+        raise NetworkError("red", resp1)
+
+    async def upload(self, adapter: "Adapter", bot: BotInfo) -> dict:
+        data = (
+            self.data["file"]
+            if self.data.get("file")
+            else await self.download(adapter, bot)
+        )
+        return json.loads(
+            (
+                await adapter.request(
+                    Request(
+                        "POST",
+                        bot.api_base / "upload",
+                        headers={
+                            "Authorization": f"Bearer {bot.token}",
+                        },
+                        files={"file_image": ("file_image", data)},
+                    )
+                )
+            ).content
+        )
+
+
 class Message(BaseMessage[MessageSegment]):
     @classmethod
     @override
@@ -240,7 +265,7 @@ class Message(BaseMessage[MessageSegment]):
 
     @classmethod
     def from_red_message(
-        cls, message: List[Element], msg_id: Optional[str] = None
+        cls, message: List[Element], msg_id: str, chat_type: int, peer_uin: str
     ) -> "Message":
         msg = Message()
         for element in message:
@@ -259,7 +284,7 @@ class Message(BaseMessage[MessageSegment]):
                     assert element.picElement
                 pic = element.picElement
                 msg.append(
-                    MessageSegment(
+                    MediaMessageSegment(
                         "image",
                         {
                             "md5": pic.md5HexStr,
@@ -270,6 +295,8 @@ class Message(BaseMessage[MessageSegment]):
                             "width": pic.picWidth,
                             "height": pic.picHeight,
                             "_msg_id": msg_id,
+                            "_chat_type": chat_type,
+                            "_peer_uin": peer_uin,
                         },
                     )
                 )
@@ -278,7 +305,7 @@ class Message(BaseMessage[MessageSegment]):
                     assert element.fileElement
                 file = element.fileElement
                 msg.append(
-                    MessageSegment(
+                    MediaMessageSegment(
                         "file",
                         {
                             "id": element.elementId,
@@ -287,6 +314,8 @@ class Message(BaseMessage[MessageSegment]):
                             "size": file.fileSize,
                             "uuid": file.fileUuid,
                             "_msg_id": msg_id,
+                            "_chat_type": chat_type,
+                            "_peer_uin": peer_uin,
                         },
                     )
                 )
@@ -295,7 +324,7 @@ class Message(BaseMessage[MessageSegment]):
                     assert element.pttElement
                 ptt = element.pttElement
                 msg.append(
-                    MessageSegment(
+                    MediaMessageSegment(
                         "voice",
                         {
                             "id": element.elementId,
@@ -308,6 +337,8 @@ class Message(BaseMessage[MessageSegment]):
                             "wave_amplitudes": ptt.waveAmplitudes,
                             "uuid": ptt.fileUuid,
                             "_msg_id": msg_id,
+                            "_chat_type": chat_type,
+                            "_peer_uin": peer_uin,
                         },
                     )
                 )
@@ -316,7 +347,7 @@ class Message(BaseMessage[MessageSegment]):
                     assert element.videoElement
                 video = element.videoElement
                 msg.append(
-                    MessageSegment(
+                    MediaMessageSegment(
                         "video",
                         {
                             "id": element.elementId,
@@ -340,6 +371,8 @@ class Message(BaseMessage[MessageSegment]):
                             "fileSubId": video.fileSubId,
                             "fileBizId": video.fileBizId,
                             "_msg_id": msg_id,
+                            "_chat_type": chat_type,
+                            "_peer_uin": peer_uin,
                         },
                     )
                 )
@@ -400,9 +433,7 @@ class Message(BaseMessage[MessageSegment]):
                 )
         return msg
 
-    async def export(
-        self, adapter: "Adapter", bot: BotInfo, chat_type: int, peer_uin: str
-    ) -> List[dict]:
+    async def export(self, adapter: "Adapter", bot: BotInfo) -> List[dict]:
         res = []
         for seg in self:
             if seg.type == "text":
@@ -419,27 +450,10 @@ class Message(BaseMessage[MessageSegment]):
             elif seg.type == "at_all":
                 res.append({"elementType": 1, "textElement": {"atType": 1}})
             elif seg.type == "image":
-                data = (
-                    seg.data["file"]
-                    if seg.data.get("file")
-                    else await _handle_image(
-                        adapter, bot, seg.data, chat_type, peer_uin
-                    )
-                )
-                resp: dict = json.loads(
-                    (
-                        await adapter.request(
-                            Request(
-                                "POST",
-                                bot.api_base / "upload",
-                                headers={
-                                    "Authorization": f"Bearer {bot.token}",
-                                },
-                                files={"file_image": ("file_image", data)},
-                            )
-                        )
-                    ).content
-                )
+                if TYPE_CHECKING:
+                    assert isinstance(seg, MediaMessageSegment)
+                resp = await seg.upload(adapter, bot)
+                file = Path(resp["ntFilePath"])
                 res.append(
                     {
                         "elementType": 2,
@@ -449,7 +463,7 @@ class Message(BaseMessage[MessageSegment]):
                             "picWidth": resp["imageInfo"]["width"],
                             "picHeight": resp["imageInfo"]["height"],
                             "fileSize": resp["fileSize"],
-                            "fileName": resp["ntFilePath"].split("\\")[-1],
+                            "fileName": file.name,
                             "sourcePath": resp["ntFilePath"],
                         },
                     }
@@ -508,3 +522,72 @@ class Message(BaseMessage[MessageSegment]):
                     "Unsupported MessageSegment type: " f"{seg.type}"
                 )
         return res
+
+
+@dataclass
+class ForwardNode:
+    uid: str
+    name: str
+    group: Union[int, str]
+    message: Message
+    time: datetime = field(default_factory=datetime.now)
+
+    async def export(self, seq: int, adapter: "Adapter", bot: BotInfo) -> dict:
+        elems = []
+        for seg in self.message:
+            if seg.type == "text":
+                elems.append({"text": {"str": seg.data["text"]}})
+            elif seg.type == "at":
+                elems.append({"text": {"str": f"@{seg.data['user_id']}"}})
+            elif seg.type == "at_all":
+                elems.append({"text": {"str": "@全体成员"}})
+            elif seg.type == "image":
+                if TYPE_CHECKING:
+                    assert isinstance(seg, MediaMessageSegment)
+                resp = await seg.upload(adapter, bot)
+                md5 = resp["md5"]
+                file = Path(resp["ntFilePath"])
+                pid = f"{{{md5[:8].upper()}-{md5[8:12].upper()}-{md5[12:16].upper()}-{md5[16:20].upper()}-{md5[20:].upper()}}}{file.suffix}"  # noqa: E501
+                elems.append(
+                    {
+                        "customFace": {
+                            "filePath": pid,
+                            "fileId": random.randint(0, 65535),
+                            "serverIp": -1740138629,
+                            "serverPort": 80,
+                            "fileType": 1001,
+                            "useful": 1,
+                            "md5": [int(md5[i : i + 2], 16) for i in range(0, 32, 2)],
+                            "imageType": 1001,
+                            "width": resp["imageInfo"]["width"],
+                            "height": resp["imageInfo"]["height"],
+                            "size": resp["fileSize"],
+                            "origin": 0,
+                            "thumbWidth": 0,
+                            "thumbHeight": 0,
+                            "pbReserve": [2, 0],
+                        }
+                    }
+                )
+            else:
+                elems.append({"text": {"str": f"[{seg.type}]"}})
+        return {
+            "head": {
+                "field2": self.uid,
+                "field8": {
+                    "field1": int(self.group),
+                    "field4": self.name,
+                },
+            },
+            "content": {
+                "field1": 82,
+                "field4": random.randint(0, 4294967295),
+                "field5": seq,
+                "field6": int(self.time.timestamp()),
+                "field7": 1,
+                "field8": 0,
+                "field9": 0,
+                "field15": {"field1": 0, "field2": 0},
+            },
+            "body": {"richText": {"elems": elems}},
+        }

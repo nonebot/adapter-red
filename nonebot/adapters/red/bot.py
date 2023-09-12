@@ -1,4 +1,5 @@
 import re
+import random
 from datetime import timedelta
 from typing_extensions import override
 from typing import Any, List, Tuple, Union, Optional
@@ -12,8 +13,8 @@ from .config import BotInfo
 from .api.model import Group, Member
 from .event import Event, MessageEvent
 from .api.model import Profile, ChatType
-from .message import Message, MessageSegment
 from .api.model import Message as MessageModel
+from .message import Message, ForwardNode, MessageSegment
 
 
 def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
@@ -115,14 +116,11 @@ class Bot(BaseBot):
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
     ) -> MessageModel:
-        peer = str(target)
-        element_data = await Message(message).export(
-            self.adapter, self.info, chat_type, peer
-        )
+        element_data = await Message(message).export(self.adapter, self.info)
         resp = await self.call_api(
             "send_message",
             chat_type=chat_type,
-            target=peer,
+            target=str(target),
             elements=element_data,
         )
         return MessageModel.parse_obj(resp)
@@ -149,9 +147,7 @@ class Bot(BaseBot):
         **kwargs: Any,
     ) -> MessageModel:
         chatType, peerUin = get_peer_data(event, **kwargs)
-        element_data = await Message(message).export(
-            self.adapter, self.info, chatType, peerUin
-        )
+        element_data = await Message(message).export(self.adapter, self.info)
         resp = await self.call_api(
             "send_message",
             chat_type=chatType,
@@ -270,4 +266,30 @@ class Bot(BaseBot):
             target=peer,
             offset=offset,
             count=count,
+        )
+
+    async def send_fake_forward(
+        self,
+        nodes: List[ForwardNode],
+        chat_type: ChatType,
+        target: Union[int, str],
+        source_chat_type: Optional[ChatType] = None,
+        source_target: Optional[Union[int, str]] = None,
+    ):
+        if not nodes:
+            raise ValueError("nodes cannot be empty")
+        peer = str(target)
+        src_peer = str(source_target or target)
+        base_seq = random.randint(0, 65535)
+        elems = []
+        for node in nodes:
+            elems.append(await node.export(base_seq, self.adapter, self.info))
+            base_seq += 1
+        await self.call_api(
+            "send_fake_forward",
+            chat_type=chat_type,
+            target=peer,
+            source_chat_type=source_chat_type or chat_type,
+            source_target=src_peer,
+            elements=elems,
         )

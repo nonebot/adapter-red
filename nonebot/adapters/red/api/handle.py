@@ -143,6 +143,26 @@ def _get_history_messages(data: Dict[str, Any]) -> Tuple[str, str, dict]:
     )
 
 
+def _send_fake_forward(data: Dict[str, Any]) -> Tuple[str, str, dict]:
+    return (
+        "message/unsafeSendForward",
+        "POST",
+        {
+            "dstContact": {
+                "chatType": data["chat_type"],
+                "peerUin": data["target"],
+                "guildId": None,
+            },
+            "srcContact": {
+                "chatType": data["source_chat_type"],
+                "peerUin": data["source_target"],
+                "guildId": None,
+            },
+            "msgElements": data["elements"],
+        },
+    )
+
+
 HANDLERS: Dict[str, Callable[[Dict[str, Any]], Tuple[str, str, dict]]] = {
     "send_message": _send_message,
     "get_self_profile": _get_self_profile,
@@ -159,4 +179,5 @@ HANDLERS: Dict[str, Callable[[Dict[str, Any]], Tuple[str, str, dict]]] = {
     "upload": _upload,
     "recall_message": _recall_message,
     "get_history_messages": _get_history_messages,
+    "send_fake_forward": _send_fake_forward,
 }
