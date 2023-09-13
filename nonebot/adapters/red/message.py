@@ -19,12 +19,11 @@ from nonebot.internal.driver import Request
 from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
-from .config import BotInfo
 from .api.model import Element
 from .utils import log, is_amr
 
 if TYPE_CHECKING:
-    from .adapter import Adapter
+    from .bot import Bot
 
 
 TMP_DIR: str = tempfile.gettempdir()
@@ -200,13 +199,13 @@ class MessageSegment(BaseMessageSegment["Message"]):
 
 
 class MediaMessageSegment(MessageSegment):
-    async def download(self, adapter: "Adapter", bot: BotInfo) -> bytes:
+    async def download(self, bot: "Bot") -> bytes:
         path = Path(self.data["path"])
         if path.exists():
             with path.open("rb") as f:
                 return f.read()
         if self.type == "image":
-            resp = await adapter.request(
+            resp = await bot.adapter.request(
                 Request(
                     "GET",
                     f"https://gchat.qpic.cn/gchatpic_new/0/0-0-{self.data['md5'].upper()}/0",
@@ -214,11 +213,11 @@ class MediaMessageSegment(MessageSegment):
             )
             if resp.status_code == 200:
                 return resp.content
-        resp1 = await adapter.request(
+        resp1 = await bot.adapter.request(
             Request(
                 "POST",
-                bot.api_base / "message" / "fetchRichMedia",
-                headers={"Authorization": f"Bearer {bot.token}"},
+                bot.info.api_base / "message" / "fetchRichMedia",
+                headers={"Authorization": f"Bearer {bot.info.token}"},
                 json={
                     "msgId": self.data["_msg_id"],
                     "chatType": self.data["_chat_type"],
@@ -233,18 +232,18 @@ class MediaMessageSegment(MessageSegment):
             return resp1.content
         raise NetworkError("red", resp1)
 
-    async def upload(self, adapter: "Adapter", bot: BotInfo) -> dict:
+    async def upload(self, bot: "Bot") -> dict:
         data = (
             self.data["file"]
             if self.data.get("file")
-            else await self.download(adapter, bot)
+            else await self.download(bot)
         )
         return json.loads(
             (
-                await adapter.request(
+                await bot.adapter.request(
                     Request(
                         "POST",
-                        bot.api_base / "upload",
+                        bot.info.api_base / "upload",
                         headers={
                             "Authorization": f"Bearer {bot.token}",
                         },
@@ -437,7 +436,7 @@ class Message(BaseMessage[MessageSegment]):
                 )
         return msg
 
-    async def export(self, adapter: "Adapter", bot: BotInfo) -> List[dict]:
+    async def export(self, bot: "Bot") -> List[dict]:
         res = []
         for seg in self:
             if seg.type == "text":
@@ -456,7 +455,7 @@ class Message(BaseMessage[MessageSegment]):
             elif seg.type == "image":
                 if TYPE_CHECKING:
                     assert isinstance(seg, MediaMessageSegment)
-                resp = await seg.upload(adapter, bot)
+                resp = await seg.upload(bot)
                 file = Path(resp["ntFilePath"])
                 res.append(
                     {
@@ -536,7 +535,7 @@ class ForwardNode:
     message: Message
     time: datetime = field(default_factory=datetime.now)
 
-    async def export(self, seq: int, adapter: "Adapter", bot: BotInfo) -> dict:
+    async def export(self, seq: int, bot: "Bot") -> dict:
         elems = []
         for seg in self.message:
             if seg.type == "text":
@@ -548,7 +547,7 @@ class ForwardNode:
             elif seg.type == "image":
                 if TYPE_CHECKING:
                     assert isinstance(seg, MediaMessageSegment)
-                resp = await seg.upload(adapter, bot)
+                resp = await seg.upload(bot)
                 md5 = resp["md5"]
                 file = Path(resp["ntFilePath"])
                 pid = f"{{{md5[:8].upper()}-{md5[8:12].upper()}-{md5[12:16].upper()}-{md5[16:20].upper()}-{md5[20:].upper()}}}{file.suffix}"  # noqa: E501

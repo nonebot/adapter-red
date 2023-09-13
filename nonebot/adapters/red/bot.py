@@ -5,7 +5,7 @@ from typing_extensions import override
 from typing import Any, List, Tuple, Union, Optional
 
 from nonebot.message import handle_event
-
+from nonebot.adapters import MessageSegment as BaseMessageSegment
 from nonebot.adapters import Bot as BaseBot
 from nonebot.adapters import Adapter as BaseAdapter
 
@@ -14,8 +14,8 @@ from .api.model import Group, Member
 from .event import Event, MessageEvent
 from .api.model import Profile, ChatType
 from .api.model import Message as MessageModel
-from .message import Message, ForwardNode, MessageSegment
-
+from .message import Message, ForwardNode, MessageSegment, MediaMessageSegment
+from .utils import log
 
 def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
     if event.chatType == ChatType.FRIEND:
@@ -123,7 +123,7 @@ class Bot(BaseBot):
             target: 目标 id
             message: 发送的消息
         """
-        element_data = await Message(message).export(self.adapter, self.info)
+        element_data = await Message(message).export(self)
         resp = await self.call_api(
             "send_message",
             chat_type=chat_type,
@@ -172,7 +172,7 @@ class Bot(BaseBot):
             message: 发送的消息
         """
         chatType, peerUin = get_peer_data(event, **kwargs)
-        element_data = await Message(message).export(self.adapter, self.info)
+        element_data = await Message(message).export(self)
         resp = await self.call_api(
             "send_message",
             chat_type=chatType,
@@ -281,6 +281,16 @@ class Bot(BaseBot):
         resp = await self.call_api("get_members", group=group, size=size)
         return [Member.parse_obj(data) for data in resp]
 
+    async def fetch(self, ms: BaseMessageSegment):
+        """获取媒体消息段的二进制数据
+
+        参数:
+            ms: 消息段
+        """
+        if not isinstance(ms, MediaMessageSegment):
+            raise ValueError(f"{ms} do not support to fetch data")
+        return await ms.download(self)
+
     async def fetch_media(
         self,
         msg_id: str,
@@ -292,12 +302,17 @@ class Bot(BaseBot):
     ) -> bytes:
         """获取媒体消息的二进制数据
 
+        注意：此接口不推荐直接使用
+
+        若需要获取媒体数据，你可以使用 `bot.fetch(MessageSegment)` 接口，或 `ms.download(Bot)` 接口
+
         参数:
             msg_id: 媒体消息的消息 id
             chat_type: 媒体消息的聊天类型
             target: 媒体消息的聊天对象 id
             element_id: 媒体消息中媒体元素的 id
         """
+        log("WARING", "This API is not suggest for user usage")
         peer = str(target)
         return await self.call_api(
             "fetch_media",
@@ -312,9 +327,12 @@ class Bot(BaseBot):
     async def upload(self, file: bytes) -> str:
         """上传资源
 
+        注意：此接口不推荐直接使用
+
         参数:
             file: 上传的资源数据
         """
+        log("WARING", "This API is not suggest for user usage")
         return await self.call_api("upload", file=file)
 
     async def recall_message(
@@ -404,7 +422,7 @@ class Bot(BaseBot):
         base_seq = random.randint(0, 65535)
         elems = []
         for node in nodes:
-            elems.append(await node.export(base_seq, self.adapter, self.info))
+            elems.append(await node.export(base_seq, self))
             base_seq += 1
         await self.call_api(
             "send_fake_forward",
