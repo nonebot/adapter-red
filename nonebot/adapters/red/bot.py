@@ -5,17 +5,19 @@ from typing_extensions import override
 from typing import Any, List, Tuple, Union, Optional
 
 from nonebot.message import handle_event
-from nonebot.adapters import MessageSegment as BaseMessageSegment
+
 from nonebot.adapters import Bot as BaseBot
 from nonebot.adapters import Adapter as BaseAdapter
+from nonebot.adapters import MessageSegment as BaseMessageSegment
 
+from .utils import log
 from .config import BotInfo
 from .api.model import Group, Member
 from .event import Event, MessageEvent
 from .api.model import Profile, ChatType
 from .api.model import Message as MessageModel
 from .message import Message, ForwardNode, MessageSegment, MediaMessageSegment
-from .utils import log
+
 
 def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
     if event.chatType == ChatType.FRIEND:
@@ -304,7 +306,8 @@ class Bot(BaseBot):
 
         注意：此接口不推荐直接使用
 
-        若需要获取媒体数据，你可以使用 `bot.fetch(MessageSegment)` 接口，或 `ms.download(Bot)` 接口
+        若需要获取媒体数据，你可以使用 `bot.fetch(MessageSegment)` 接口，
+        或 `ms.download(Bot)` 接口
 
         参数:
             msg_id: 媒体消息的消息 id

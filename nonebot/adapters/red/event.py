@@ -103,6 +103,7 @@ class MessageEvent(Event, MessageModel):
         """群组或好友的id"""
         return self.peerUin or self.peerUid
 
+
 class PrivateMessageEvent(MessageEvent):
     """好友消息事件"""
 

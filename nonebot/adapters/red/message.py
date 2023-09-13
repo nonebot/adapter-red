@@ -190,7 +190,7 @@ class MessageSegment(BaseMessageSegment["Message"]):
         log(
             "WARNING",
             "forward only can be received!\n"
-            "using `bot.send_fake_forward` to send a fake forward msg"
+            "using `bot.send_fake_forward` to send a fake forward msg",
         )
         return MessageSegment(
             "forward",
@@ -233,11 +233,7 @@ class MediaMessageSegment(MessageSegment):
         raise NetworkError("red", resp1)
 
     async def upload(self, bot: "Bot") -> dict:
-        data = (
-            self.data["file"]
-            if self.data.get("file")
-            else await self.download(bot)
-        )
+        data = self.data["file"] if self.data.get("file") else await self.download(bot)
         resp = await bot.adapter.request(
             Request(
                 "POST",

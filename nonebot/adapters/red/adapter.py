@@ -4,7 +4,7 @@ from typing import Any, List, Type, Union, Optional
 
 from nonebot.typing import override
 from nonebot.utils import escape_tag
-from nonebot.exception import WebSocketClosed, NetworkError
+from nonebot.exception import NetworkError, WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
 
 from nonebot.adapters import Adapter as BaseAdapter
