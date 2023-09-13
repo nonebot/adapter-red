@@ -116,6 +116,13 @@ class Bot(BaseBot):
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
     ) -> MessageModel:
+        """依据聊天类型与目标 id 发送消息
+
+        参数:
+            chat_type: 聊天类型，分为好友与群组
+            target: 目标 id
+            message: 发送的消息
+        """
         element_data = await Message(message).export(self.adapter, self.info)
         resp = await self.call_api(
             "send_message",
@@ -130,6 +137,12 @@ class Bot(BaseBot):
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
     ) -> MessageModel:
+        """发送好友消息
+
+        参数:
+            target: 好友 id
+            message: 发送的消息
+        """
         return await self.send_message(ChatType.FRIEND, target, message)
 
     async def send_group_message(
@@ -137,6 +150,12 @@ class Bot(BaseBot):
         target: Union[int, str],
         message: Union[str, Message, MessageSegment],
     ) -> MessageModel:
+        """发送群组消息
+
+        参数:
+            target: 群组 id
+            message: 发送的消息
+        """
         return await self.send_message(ChatType.GROUP, target, message)
 
     @override
@@ -146,6 +165,12 @@ class Bot(BaseBot):
         message: Union[str, Message, MessageSegment],
         **kwargs: Any,
     ) -> MessageModel:
+        """依据收到的事件发送消息
+
+        参数:
+            event: 收到的事件
+            message: 发送的消息
+        """
         chatType, peerUin = get_peer_data(event, **kwargs)
         element_data = await Message(message).export(self.adapter, self.info)
         resp = await self.call_api(
@@ -157,20 +182,32 @@ class Bot(BaseBot):
         return MessageModel.parse_obj(resp)
 
     async def get_self_profile(self) -> Profile:
+        """获取登录账号自己的资料"""
         resp = await self.call_api("get_self_profile")
         return Profile.parse_obj(resp)
 
     async def get_friends(self) -> List[Profile]:
+        """获取登录账号所有好友的资料"""
         resp = await self.call_api("get_friends")
         return [Profile.parse_obj(data) for data in resp]
 
     async def get_groups(self) -> List[Group]:
+        """获取登录账号所有群组的资料"""
         resp = await self.call_api("get_groups")
         return [Group.parse_obj(data) for data in resp]
 
     async def mute_member(
         self, group: int, *members: int, duration: Union[int, timedelta] = 60
     ):
+        """禁言群成员
+
+        禁言时间会自动限制在 60s 至 30天内
+
+        参数:
+            group: 群号
+            *members: 禁言目标的 id
+            duration: 禁言时间
+        """
         if isinstance(duration, timedelta):
             duration = int(duration.total_seconds())
         duration = max(60, min(2592000, duration))
@@ -179,12 +216,28 @@ class Bot(BaseBot):
         )
 
     async def unmute_member(self, group: int, *members: int):
+        """解除群成员禁言
+
+        参数:
+            group: 群号
+            *members: 禁言目标的 id
+        """
         await self.call_api("unmute_member", group=group, members=list(members))
 
     async def mute_everyone(self, group: int):
+        """开启全体禁言
+
+        参数:
+            group: 群号
+        """
         await self.call_api("mute_everyone", group=group)
 
     async def unmute_everyone(self, group: int):
+        """关闭全体禁言
+
+        参数:
+            group: 群号
+        """
         await self.call_api("unmute_everyone", group=group)
 
     async def kick(
@@ -194,6 +247,14 @@ class Bot(BaseBot):
         refuse_forever: bool = False,
         reason: Optional[str] = None,
     ):
+        """移除群成员
+
+        参数:
+            group: 群号
+            *members: 要移除的群成员账号
+            refuse_forever: 是否不再接受群成员的入群申请
+            reason: 移除理由
+        """
         await self.call_api(
             "kick",
             group=group,
@@ -203,9 +264,20 @@ class Bot(BaseBot):
         )
 
     async def get_announcements(self, group: int) -> List[dict]:
+        """拉取群公告
+
+        参数:
+            group: 群号
+        """
         return await self.call_api("get_announcements", group=group)
 
     async def get_members(self, group: int, size: int = 20) -> List[Member]:
+        """获取指定群组内的成员资料
+
+        参数:
+            group: 群号
+            size: 拉取多少个成员资料
+        """
         resp = await self.call_api("get_members", group=group, size=size)
         return [Member.parse_obj(data) for data in resp]
 
@@ -218,6 +290,14 @@ class Bot(BaseBot):
         thumb_size: int = 0,
         download_type: int = 2,
     ) -> bytes:
+        """获取媒体消息的二进制数据
+
+        参数:
+            msg_id: 媒体消息的消息 id
+            chat_type: 媒体消息的聊天类型
+            target: 媒体消息的聊天对象 id
+            element_id: 媒体消息中媒体元素的 id
+        """
         peer = str(target)
         return await self.call_api(
             "fetch_media",
@@ -230,6 +310,11 @@ class Bot(BaseBot):
         )
 
     async def upload(self, file: bytes) -> str:
+        """上传资源
+
+        参数:
+            file: 上传的资源数据
+        """
         return await self.call_api("upload", file=file)
 
     async def recall_message(
@@ -238,6 +323,13 @@ class Bot(BaseBot):
         target: Union[int, str],
         *ids: str,
     ):
+        """撤回消息
+
+        参数:
+            chat_type: 聊天类型，分为好友与群组
+            target: 目标 id
+            *ids: 要撤回的消息 id
+        """
         peer = str(target)
         await self.call_api(
             "recall_message",
@@ -247,9 +339,21 @@ class Bot(BaseBot):
         )
 
     async def recall_group_message(self, group: int, *ids: str):
+        """撤回群组消息
+
+        参数:
+            target: 群组 id
+            *ids: 要撤回的消息 id
+        """
         await self.recall_message(ChatType.GROUP, group, *ids)
 
     async def recall_friend_message(self, friend: int, *ids: str):
+        """撤回好友消息
+
+        参数:
+            target: 好友 id
+            *ids: 要撤回的消息 id
+        """
         await self.recall_message(ChatType.FRIEND, friend, *ids)
 
     async def get_history_messages(
@@ -259,6 +363,14 @@ class Bot(BaseBot):
         offset: int = 0,
         count: int = 100,
     ):
+        """拉取历史消息
+
+        参数:
+            chat_type: 聊天类型，分为好友与群组
+            target: 目标 id
+            offset: 从最近一条消息算起，选择从第几条消息开始拉取
+            count: 一次拉取多少消息
+        """
         peer = str(target)
         return await self.call_api(
             "get_history_messages",
@@ -276,6 +388,15 @@ class Bot(BaseBot):
         source_chat_type: Optional[ChatType] = None,
         source_target: Optional[Union[int, str]] = None,
     ):
+        """发送伪造合并转发消息
+
+        参数:
+            nodes: 合并转发节点
+            chat_type: 聊天类型，分为好友与群组
+            target: 目标 id
+            source_chat_type: 伪造的消息来源聊天类型，分为好友与群组
+            source_target: 伪造的消息来源聊天对象 id
+        """
         if not nodes:
             raise ValueError("nodes cannot be empty")
         peer = str(target)

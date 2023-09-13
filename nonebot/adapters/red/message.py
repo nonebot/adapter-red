@@ -187,10 +187,14 @@ class MessageSegment(BaseMessageSegment["Message"]):
         )
 
     @staticmethod
-    def forward_msg(xml: str, id: str, file_name: str) -> "MessageSegment":
-        log("WARNING", "forward_msg only can be received!")
+    def forward(xml: str, id: str, file_name: str) -> "MessageSegment":
+        log(
+            "WARNING",
+            "forward only can be received!\n"
+            "using `bot.send_fake_forward` to send a fake forward msg"
+        )
         return MessageSegment(
-            "forward_msg",
+            "forward",
             {"xml": xml, "id": id, "name": file_name},
         )
 
@@ -423,7 +427,7 @@ class Message(BaseMessage[MessageSegment]):
                 forward_msg = element.multiForwardMsgElement
                 msg.append(
                     MessageSegment(
-                        "forward_msg",
+                        "forward",
                         {
                             "xml": forward_msg.xmlContent,
                             "id": forward_msg.resId,
