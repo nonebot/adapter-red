@@ -1,8 +1,8 @@
 import json
 import asyncio
+from typing_extensions import override
 from typing import Any, List, Type, Union, Optional
 
-from nonebot.typing import override
 from nonebot.utils import escape_tag
 from nonebot.exception import NetworkError, WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
@@ -107,7 +107,8 @@ class Adapter(BaseAdapter):
                             e,
                         )
                     finally:
-                        self.bot_disconnect(bot)
+                        if bot:
+                            self.bot_disconnect(bot)
             except Exception as e:
                 # 尝试重连
                 log(
@@ -199,9 +200,7 @@ class Adapter(BaseAdapter):
                 _handle_event(json_data["payload"], Event)
 
     @override
-    async def _call_api(
-        self, bot: Bot, api: str, **data: Any
-    ) -> Optional[Union[dict, bytes]]:
+    async def _call_api(self, bot: Bot, api: str, **data: Any) -> Union[dict, bytes]:
         log("DEBUG", f"Calling API <y>{api}</y>")  # 给予日志提示
         if not (handler := HANDLERS.get(api)):
             raise NotImplementedError(f"API {api} not implemented")
@@ -215,9 +214,9 @@ class Adapter(BaseAdapter):
             data=platform_data,
         )
         if api == "message/fetchRichMedia":
-            return (await self.request(request)).content
+            return (await self.request(request)).content  # type: ignore
         # 发送请求，返回结果
-        return json.loads((await self.request(request)).content)
+        return json.loads((await self.request(request)).content)  # type: ignore
 
     @override
     async def request(self, setup: Request):

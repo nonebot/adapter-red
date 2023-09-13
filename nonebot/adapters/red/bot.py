@@ -26,6 +26,7 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
         first_element = event.elements[0]
         if (
             first_element.elementType == 1
+            and first_element.textElement
             and first_element.textElement.atType == 2
             and first_element.textElement.atNtUin == bot.self_id
         ):
@@ -37,6 +38,7 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
             second_element = event.elements[0]
             if (
                 second_element.elementType == 1
+                and second_element.textElement
                 and second_element.textElement.atType == 0
                 and not second_element.textElement.content.strip()
             ):
@@ -47,6 +49,7 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
             last_element = event.elements[i]
             if (
                 last_element.elementType == 1
+                and last_element.textElement
                 and last_element.textElement.atType == 0
                 and not last_element.textElement.content.strip()
                 and len(event.elements) >= 1
@@ -57,6 +60,7 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
 
             if (
                 last_element.elementType == 1
+                and last_element.textElement
                 and last_element.textElement.atType == 2
                 and last_element.textElement.atNtUin == bot.self_id
             ):

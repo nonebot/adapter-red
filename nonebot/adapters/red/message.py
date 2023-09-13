@@ -212,7 +212,7 @@ class MediaMessageSegment(MessageSegment):
                 )
             )
             if resp.status_code == 200:
-                return resp.content
+                return resp.content  # type: ignore
         resp1 = await bot.adapter.request(
             Request(
                 "POST",
@@ -229,7 +229,7 @@ class MediaMessageSegment(MessageSegment):
             )
         )
         if resp1.status_code == 200:
-            return resp1.content
+            return resp1.content  # type: ignore
         raise NetworkError("red", resp1)
 
     async def upload(self, bot: "Bot") -> dict:
@@ -244,7 +244,7 @@ class MediaMessageSegment(MessageSegment):
                 files={"file_image": ("file_image", data)},
             )
         )
-        return json.loads(resp.content)
+        return json.loads(resp.content)  # type: ignore
 
 
 class Message(BaseMessage[MessageSegment]):
@@ -274,7 +274,7 @@ class Message(BaseMessage[MessageSegment]):
                 elif text.atType == 1:
                     msg.append(MessageSegment.at_all())
                 elif text.atType == 2:
-                    msg.append(MessageSegment.at(text.atNtUin or text.atNtUid))
+                    msg.append(MessageSegment.at(text.atNtUin or text.atNtUid))  # type: ignore  # noqa: E501
             if element.elementType == 2:
                 if TYPE_CHECKING:
                     assert element.picElement
@@ -476,7 +476,7 @@ class Message(BaseMessage[MessageSegment]):
                         "pttElement": {
                             "md5HexStr": data["md5"],
                             "fileSize": data["fileSize"],
-                            "fileName": data["md5"] + ".amr",
+                            "fileName": data["md5"] + ".amr",  # type: ignore
                             "filePath": data["filePath"],
                             "waveAmplitudes": [8, 0, 40, 0, 56, 0],
                             "duration": data["duration"],
