@@ -98,6 +98,10 @@ class MessageEvent(Event, MessageModel):
     def is_tome(self) -> bool:
         return self.to_me
 
+    @property
+    def scene(self) -> str:
+        """群组或好友的id"""
+        return self.peerUin or self.peerUid
 
 class PrivateMessageEvent(MessageEvent):
     """好友消息事件"""
@@ -153,6 +157,11 @@ class NoticeEvent(Event):
     def get_session_id(self) -> str:
         # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
         return self.msgId
+
+    @property
+    def scene(self) -> str:
+        """群组或好友的id"""
+        return self.peerUin or self.peerUid
 
     class Config:
         extra = "ignore"
@@ -252,7 +261,7 @@ class MemberAddEvent(NoticeEvent):
             params["memberUid"] = mat[2]
         else:
             params["memberUid"] = obj.elements[0].grayTipElement.groupElement.memberUin  # type: ignore  # noqa: E501
-            params["operatorUid"] = obj.elements[0].grayTipElement.groupElement.operatorUin  # type: ignore  # noqa: E501
+            params["operatorUid"] = obj.elements[0].grayTipElement.groupElement.adminUin  # type: ignore  # noqa: E501
             params["memberName"] = obj.elements[0].grayTipElement.groupElement.memberNick  # type: ignore  # noqa: E501
         return cls(**params)
 

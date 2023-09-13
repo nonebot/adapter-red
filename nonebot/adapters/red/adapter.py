@@ -4,7 +4,7 @@ from typing import Any, List, Type, Union, Optional
 
 from nonebot.typing import override
 from nonebot.utils import escape_tag
-from nonebot.exception import WebSocketClosed
+from nonebot.exception import WebSocketClosed, NetworkError
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
 
 from nonebot.adapters import Adapter as BaseAdapter
@@ -218,3 +218,10 @@ class Adapter(BaseAdapter):
             return (await self.request(request)).content
         # 发送请求，返回结果
         return json.loads((await self.request(request)).content)
+
+    @override
+    async def request(self, setup: Request):
+        resp = await super().request(setup)
+        if resp.status_code != 200:
+            raise NetworkError("Unauthorized!")
+        return resp

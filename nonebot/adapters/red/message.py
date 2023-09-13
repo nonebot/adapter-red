@@ -238,20 +238,17 @@ class MediaMessageSegment(MessageSegment):
             if self.data.get("file")
             else await self.download(bot)
         )
-        return json.loads(
-            (
-                await bot.adapter.request(
-                    Request(
-                        "POST",
-                        bot.info.api_base / "upload",
-                        headers={
-                            "Authorization": f"Bearer {bot.token}",
-                        },
-                        files={"file_image": ("file_image", data)},
-                    )
-                )
-            ).content
+        resp = await bot.adapter.request(
+            Request(
+                "POST",
+                bot.info.api_base / "upload",
+                headers={
+                    "Authorization": f"Bearer {bot.info.token}",
+                },
+                files={"file_image": ("file_image", data)},
+            )
         )
+        return json.loads(resp.content)
 
 
 class Message(BaseMessage[MessageSegment]):
