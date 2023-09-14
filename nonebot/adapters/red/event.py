@@ -92,7 +92,7 @@ class MessageEvent(Event, MessageModel):
     @override
     def get_session_id(self) -> str:
         # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
-        return self.msgId
+        return f"{self.peerUin or self.peerUid}_{self.senderUin or self.senderUid}"
 
     @override
     def is_tome(self) -> bool:
@@ -154,11 +154,6 @@ class NoticeEvent(Event):
     def get_event_name(self) -> str:
         return "notice"
 
-    @override
-    def get_session_id(self) -> str:
-        # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
-        return self.msgId
-
     @property
     def scene(self) -> str:
         """群组或好友的id"""
@@ -192,6 +187,11 @@ class GroupNameUpdateEvent(NoticeEvent):
         if self.operatorUid is None:
             raise ValueError("user_id doesn't exist.")
         return self.operatorUid
+
+    @override
+    def get_session_id(self) -> str:
+        # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
+        return f"{self.peerUin or self.peerUid}_{self.operatorUid}"
 
     @classmethod
     @override
@@ -236,6 +236,11 @@ class MemberAddEvent(NoticeEvent):
     def get_user_id(self) -> str:
         return self.memberUid
 
+    @override
+    def get_session_id(self) -> str:
+        # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
+        return f"{self.peerUin or self.peerUid}_{self.memberUid}"
+
     legacy_invite_message = re.compile(
         r'jp="(\d+)".*jp="(\d+)"', re.DOTALL | re.MULTILINE | re.IGNORECASE
     )
@@ -256,7 +261,11 @@ class MemberAddEvent(NoticeEvent):
             "peerUin": obj.peerUin,
         }
         if obj.elements[0].grayTipElement.xmlElement:  # type: ignore
-            if not (mat := cls.legacy_invite_message.match(obj.elements[0].grayTipElement.xmlElement.content)):  # type: ignore  # noqa: E501
+            if not (
+                mat := cls.legacy_invite_message.match(
+                    obj.elements[0].grayTipElement.xmlElement.content
+                )
+            ):  # type: ignore  # noqa: E501
                 raise ValueError("Invalid legacy invite message.")
             params["operatorUid"] = mat[1]
             params["memberUid"] = mat[2]
@@ -279,6 +288,11 @@ class MemberMuteEvent(NoticeEvent):
     def get_user_id(self) -> str:
         return self.member.uin or self.member.uid
 
+    @override
+    def get_session_id(self) -> str:
+        # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
+        return f"{self.peerUin or self.peerUid}_{self.member.uin or self.member.uid}"
+
     @classmethod
     @override
     def convert(cls, obj: Any):
@@ -293,8 +307,14 @@ class MemberMuteEvent(NoticeEvent):
             "subMsgType": obj.subMsgType,
             "peerUid": obj.peerUid,
             "peerUin": obj.peerUin,
-            "start": datetime.fromtimestamp(obj.elements[0].grayTipElement.groupElement.shutUp.curTime),  # type: ignore  # noqa: E501
-            "duration": timedelta(seconds=obj.elements[0].grayTipElement.groupElement.shutUp.duration),  # type: ignore  # noqa: E501
+            "start": datetime.fromtimestamp(
+                obj.elements[0].grayTipElement.groupElement.shutUp.curTime
+            ),
+            # type: ignore  # noqa: E501
+            "duration": timedelta(
+                seconds=obj.elements[0].grayTipElement.groupElement.shutUp.duration
+            ),
+            # type: ignore  # noqa: E501
             "operator": obj.elements[0].grayTipElement.groupElement.shutUp.admin,  # type: ignore  # noqa: E501
             "member": obj.elements[0].grayTipElement.groupElement.shutUp.member,  # type: ignore  # noqa: E501
         }
