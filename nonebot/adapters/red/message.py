@@ -1,17 +1,10 @@
-import os
-import re
-import json
-import uuid
 import random
-import hashlib
-import tempfile
-import subprocess
 from io import BytesIO
 from pathlib import Path
 from datetime import datetime
 from typing_extensions import override
 from dataclasses import field, dataclass
-from typing import TYPE_CHECKING, Dict, List, Type, Union, Iterable, Optional
+from typing import TYPE_CHECKING, List, Type, Union, Iterable, Optional
 
 from nonebot.exception import NetworkError
 from nonebot.internal.driver import Request
@@ -19,74 +12,11 @@ from nonebot.internal.driver import Request
 from nonebot.adapters import Message as BaseMessage
 from nonebot.adapters import MessageSegment as BaseMessageSegment
 
-from .api.model import Element
-from .utils import log, is_amr
+from .utils import log
+from .api.model import Element, UploadResponse
 
 if TYPE_CHECKING:
     from .bot import Bot
-
-
-TMP_DIR: str = tempfile.gettempdir()
-
-
-def _handle_audio(buffer: bytes) -> Dict[str, Union[str, int]]:
-    head: str = buffer[:7].decode()
-
-    if not is_amr(buffer):
-        uuid_str: str = str(uuid.uuid4())
-        save_path: str = os.path.join(TMP_DIR, uuid_str)
-        with open(save_path, "wb") as f:
-            f.write(buffer)
-        buffer = _audio_trans(save_path)
-        os.remove(save_path)
-
-    md5: str = hashlib.md5(buffer).hexdigest()
-
-    save_path = os.path.join(TMP_DIR, md5)
-    with open(save_path, "wb") as f:
-        f.write(buffer)
-
-    duration: int = 0 if "SILK" in head else _get_duration(save_path)
-    os.remove(f"{save_path}.mp3")
-
-    return {
-        "md5": md5,
-        "fileSize": len(buffer),
-        "filePath": save_path,
-        "duration": duration,
-    }
-
-
-def _audio_trans(file: str, ffmpeg: str = "ffmpeg") -> bytes:
-    tmpfile: str = os.path.join(TMP_DIR, str(uuid.uuid4()))
-    cmd: str = f"{ffmpeg} -y -i {file} -ac 1 -ar 8000 -ab 12.2k -f amr {tmpfile}"
-
-    try:
-        subprocess.run(cmd, shell=True, check=True, capture_output=True)
-        with open(tmpfile, "rb") as f:
-            amr: bytes = f.read()
-        return amr
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            "音频转码到 amr 失败, 请确认你的 ffmpeg 可以处理此转换",
-        ) from e
-    finally:
-        os.remove(tmpfile)
-
-
-def _get_duration(file: str, ffmpeg: str = "ffmpeg") -> int:
-    cmd: str = f"{ffmpeg} -i {file} {file}.mp3"
-    result = subprocess.run(
-        cmd, shell=True, check=False, capture_output=True, input=b"y"
-    )
-    out_str: str = result.stderr.decode()
-    reg_duration: str = r"Duration: ([0-9:.]+),"
-    rs = re.search(reg_duration, out_str)
-    if not rs:
-        raise RuntimeError("获取音频时长失败, 请确认你的 ffmpeg 可用")
-    time_str: str = rs[1]
-    parts: List[str] = time_str.split(":")
-    return int(int(parts[0]) * 3600 + int(parts[1]) * 60 + float(parts[2]))
 
 
 class MessageSegment(BaseMessageSegment["Message"]):
@@ -135,12 +65,12 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MediaMessageSegment("file", {"file": file})
 
     @staticmethod
-    def voice(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
+    def voice(file: Union[Path, BytesIO, bytes], duration: int = 1) -> "MessageSegment":
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
             file = file.getvalue()
-        return MediaMessageSegment("voice", {"file": file})
+        return MediaMessageSegment("voice", {"file": file, "duration": duration})
 
     @staticmethod
     def video(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
@@ -223,7 +153,7 @@ class MediaMessageSegment(MessageSegment):
             return resp.content  # type: ignore
         raise NetworkError("red", resp)
 
-    async def upload(self, bot: "Bot") -> dict:
+    async def upload(self, bot: "Bot") -> UploadResponse:
         data = self.data["file"] if self.data.get("file") else await self.download(bot)
         resp = await bot.adapter.request(
             Request(
@@ -232,10 +162,10 @@ class MediaMessageSegment(MessageSegment):
                 headers={
                     "Authorization": f"Bearer {bot.info.token}",
                 },
-                files={"file_image": ("file_image", data)},
+                files={f"file_{self.type}": (f"file_{self.type}", data)},
             )
         )
-        return json.loads(resp.content)  # type: ignore
+        return UploadResponse.parse_raw(resp.content)
 
 
 class Message(BaseMessage[MessageSegment]):
@@ -319,9 +249,9 @@ class Message(BaseMessage[MessageSegment]):
                             "path": ptt.filePath,
                             "md5": ptt.md5HexStr,
                             "type": ptt.voiceChangeType,
-                            "can_convert_to_text": ptt.canConvert2Text,
                             "text": ptt.text,
-                            "wave_amplitudes": ptt.waveAmplitudes,
+                            "duration": ptt.duration,
+                            "amplitudes": ptt.waveAmplitudes,
                             "uuid": ptt.fileUuid,
                             "_msg_id": msg_id,
                             "_chat_type": chat_type,
@@ -367,7 +297,7 @@ class Message(BaseMessage[MessageSegment]):
                 if TYPE_CHECKING:
                     assert element.faceElement
                 face = element.faceElement
-                msg.append(MessageSegment.face(face.faceIndex))
+                msg.append(MessageSegment.face(str(face.faceIndex)))
             if element.elementType == 7:
                 if TYPE_CHECKING:
                     assert element.replyElement
@@ -440,18 +370,18 @@ class Message(BaseMessage[MessageSegment]):
                 if TYPE_CHECKING:
                     assert isinstance(seg, MediaMessageSegment)
                 resp = await seg.upload(bot)
-                file = Path(resp["ntFilePath"])
+                file = Path(resp.ntFilePath)
                 res.append(
                     {
                         "elementType": 2,
                         "picElement": {
                             "original": True,
-                            "md5HexStr": resp["md5"],
-                            "picWidth": resp["imageInfo"]["width"],
-                            "picHeight": resp["imageInfo"]["height"],
-                            "fileSize": resp["fileSize"],
+                            "md5HexStr": resp.md5,
+                            "picWidth": resp.imageInfo and resp.imageInfo.width,
+                            "picHeight": resp.imageInfo and resp.imageInfo.height,
+                            "fileSize": resp.fileSize,
                             "fileName": file.name,
-                            "sourcePath": resp["ntFilePath"],
+                            "sourcePath": resp.ntFilePath,
                         },
                     }
                 )
@@ -460,17 +390,27 @@ class Message(BaseMessage[MessageSegment]):
                     "Unsupported MessageSegment type: " f"{seg.type}"
                 )
             elif seg.type == "voice":
-                data = _handle_audio(seg.data["file"])
+                if TYPE_CHECKING:
+                    assert isinstance(seg, MediaMessageSegment)
+                resp = await seg.upload(bot)
+                file = Path(resp.ntFilePath)
                 res.append(
                     {
                         "elementType": 4,
                         "pttElement": {
-                            "md5HexStr": data["md5"],
-                            "fileSize": data["fileSize"],
-                            "fileName": data["md5"] + ".amr",  # type: ignore
-                            "filePath": data["filePath"],
-                            "waveAmplitudes": [8, 0, 40, 0, 56, 0],
-                            "duration": data["duration"],
+                            "canConvert2Text": True,
+                            "md5HexStr": resp.md5,
+                            "fileSize": resp.fileSize,
+                            "fileName": file.name,
+                            "filePath": resp.ntFilePath,
+                            "duration": seg.data["duration"],
+                            "formatType": 1,
+                            "voiceType": 1,
+                            "voiceChangeType": 0,
+                            "playState": 1,
+                            "waveAmplitudes": seg.get(
+                                "amplitudes", [99 for _ in range(17)]
+                            ),
                         },
                     }
                 )
@@ -532,8 +472,8 @@ class ForwardNode:
                 if TYPE_CHECKING:
                     assert isinstance(seg, MediaMessageSegment)
                 resp = await seg.upload(bot)
-                md5 = resp["md5"]
-                file = Path(resp["ntFilePath"])
+                md5 = resp.md5
+                file = Path(resp.ntFilePath)
                 pid = f"{{{md5[:8].upper()}-{md5[8:12].upper()}-{md5[12:16].upper()}-{md5[16:20].upper()}-{md5[20:].upper()}}}{file.suffix}"  # noqa: E501
                 elems.append(
                     {
@@ -546,9 +486,9 @@ class ForwardNode:
                             "useful": 1,
                             "md5": [int(md5[i : i + 2], 16) for i in range(0, 32, 2)],
                             "imageType": 1001,
-                            "width": resp["imageInfo"]["width"],
-                            "height": resp["imageInfo"]["height"],
-                            "size": resp["fileSize"],
+                            "width": resp.imageInfo and resp.imageInfo.width,
+                            "height": resp.imageInfo and resp.imageInfo.height,
+                            "size": resp.fileSize,
                             "origin": 0,
                             "thumbWidth": 0,
                             "thumbHeight": 0,

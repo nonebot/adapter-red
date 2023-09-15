@@ -14,8 +14,8 @@ from .utils import log
 from .config import BotInfo
 from .api.model import Group, Member
 from .event import Event, MessageEvent
-from .api.model import Profile, ChatType
 from .api.model import Message as MessageModel
+from .api.model import Profile, ChatType, UploadResponse
 from .message import Message, ForwardNode, MessageSegment, MediaMessageSegment
 
 
@@ -331,7 +331,7 @@ class Bot(BaseBot):
             download_type=download_type,
         )
 
-    async def upload(self, file: bytes) -> str:
+    async def upload(self, file: bytes) -> UploadResponse:
         """上传资源
 
         注意：此接口不推荐直接使用
@@ -340,7 +340,7 @@ class Bot(BaseBot):
             file: 上传的资源数据
         """
         log("WARING", "This API is not suggest for user usage")
-        return await self.call_api("upload", file=file)
+        return UploadResponse.parse_obj(await self.call_api("upload", file=file))
 
     async def recall_message(
         self,

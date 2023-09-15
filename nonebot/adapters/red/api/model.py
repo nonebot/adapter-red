@@ -135,52 +135,101 @@ class PicElement(BaseModel):
     emojiZplan: Optional[EmojiZplan]
 
 
+class FaceElement(BaseModel):
+    faceIndex: int
+    faceText: Optional[str]
+    """{None: normal, '/xxx': sticker, '': poke}"""
+    faceType: int
+    """{1: normal, 2: normal-extended, 3: sticker, 5: poke}"""
+    packId: Optional[Any]
+    stickerId: Optional[Any]
+    sourceType: Optional[Any]
+    stickerType: Optional[Any]
+    resultId: Optional[Any]
+    surpriseId: Optional[Any]
+    randomType: Optional[Any]
+    imageType: Optional[Any]
+    pokeType: Optional[Any]
+    spokeSummary: Optional[Any]
+    doubleHit: Optional[Any]
+    vaspokeId: Optional[Any]
+    vaspokeName: Optional[Any]
+    vaspokeMinver: Optional[Any]
+    pokeStrength: Optional[Any]
+    msgType: Optional[Any]
+    faceBubbleCount: Optional[Any]
+    pokeFlag: Optional[Any]
+
+
 class FileElement(BaseModel):
     fileMd5: str
     fileName: str
+    filePath: str
     fileSize: str
-    fileUuid: str
+    picHeight: Optional[int]
+    picWidth: Optional[int]
+    picThumbPath: Optional[Any]
+    expireTime: Optional[str]
+    file10MMd5: Optional[str]
+    fileSha: Optional[str]
+    fileSha3: Optional[str]
+    videoDuration: Optional[int]
+    transferStatus: Optional[int]
+    progress: Optional[int]
+    invalidState: Optional[int]
+    fileUuid: Optional[str]
+    fileSubId: Optional[str]
+    thumbFileSize: Optional[int]
+    fileBizId: Optional[Any]
+    thumbMd5: Optional[Any]
+    folderId: Optional[Any]
+    fileGroupIndex: Optional[int]
+    fileTransType: Optional[Any]
 
 
 class PttElement(BaseModel):
     fileName: str
     filePath: str
     md5HexStr: str
+    fileSize: str
+    duration: int
+    formatType: int
+    voiceType: int
     voiceChangeType: int
-    """{0: normal, 1: magic}"""
     canConvert2Text: bool
-    text: Optional[str]
-    """原文中这里的`text`比其它属性多缩进了一格，请根据`canConvert2Text`来判断`text`的存在与否"""
-    waveAmplitudes: Any
+    fileId: int
     fileUuid: str
+    text: Optional[str]
+    translateStatus: Optional[int]
+    transferStatus: Optional[int]
+    progress: Optional[int]
+    playState: Optional[int]
+    waveAmplitudes: Optional[List[int]]
+    invalidState: Optional[int]
+    fileSubId: Optional[str]
+    fileBizId: Optional[Any]
 
 
-class FaceElement(BaseModel):
-    faceIndex: str
-    faceText: Optional[str]
-    """{None: normal, '/xxx': sticker, '': poke}"""
-    faceType: int
-    """{1: normal, 2: normal-extended, 3: sticker, 5: poke}"""
-    packId: Optional[str]
-    """{None: other, '1': sticker}"""
-    stickerId: Optional[str]
-    """{None: other, 'xxx': sticker}"""
-    sourceType: Optional[int]
-    """{None: other, 1: sticker}"""
-    stickerType: Optional[int]
-    """{None: other, 1: sticker}"""
-    randomType: Optional[int]
-    """{None: other, 1: sticker}"""
-    pokeType: Optional[int]
-    """{None: other, xxx: poke}"""
-    spokeSummary: Optional[str]
-    """{None: other, '': poke}"""
-    doubleHit: Optional[int]
-    """{None: other, xxx: poke}"""
-    vaspokeId: Optional[int]
-    """{None: other, xxx: poke}"""
-    vaspokeName: Optional[str]
-    """{None: other, 'xxx': poke}"""
+class VideoElement(BaseModel):
+    filePath: str
+    fileName: str
+    videoMd5: str
+    thumbMd5: str
+    fileTime: int
+    thumbSize: int
+    fileFormat: int
+    fileSize: str
+    thumbWidth: int
+    thumbHeight: int
+    busiType: int
+    subBusiType: int
+    thumbPath: Optional[Any]
+    transferStatus: Optional[int]
+    progress: Optional[int]
+    invalidState: Optional[int]
+    fileUuid: Optional[str]
+    fileSubId: Optional[str]
+    fileBizId: Optional[Any]
 
 
 class ReplyElement(BaseModel):
@@ -215,29 +264,6 @@ class MultiForwardMsgElement(BaseModel):
     xmlContent: str
     resId: str
     fileName: str
-
-
-class VideoElement(BaseModel):
-    filePath: str
-    fileName: str
-    videoMd5: str
-    thumbMd5: str
-    fileTime: int
-    thumbSize: int
-    fileFormat: int
-    fileSize: str
-    thumbWidth: int
-    thumbHeight: int
-    busiType: int
-    subBusiType: int
-    thumbPath: dict
-    """不清楚为什么是dict，这是收到的数据: {}"""
-    transferStatus: int
-    progress: int
-    invalidState: int
-    fileUuid: str
-    fileSubId: str
-    fileBizId: Optional[str]
 
 
 class GrayTipElement(BaseModel):
@@ -416,3 +442,20 @@ class Group(BaseModel):
     discussToGroupUin: str
     discussToGroupMaxMsgSeq: int
     discussToGroupTime: int
+
+
+class ImageInfo(BaseModel):
+    width: int
+    height: int
+    type: str
+    mime: str
+    wUnits: str
+    hUnits: str
+
+
+class UploadResponse(BaseModel):
+    md5: str
+    imageInfo: Optional[ImageInfo]
+    fileSize: int
+    filePath: str
+    ntFilePath: str
