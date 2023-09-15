@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-adapter-red"
-version = "0.2.1"
+version = "0.2.2"
 description = "Red Protocol Adapter for Nonebot2"
 authors = [
     {name = "zhaomaoniu"},

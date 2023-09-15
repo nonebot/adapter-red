@@ -204,16 +204,7 @@ class MediaMessageSegment(MessageSegment):
         if path.exists():
             with path.open("rb") as f:
                 return f.read()
-        if self.type == "image":
-            resp = await bot.adapter.request(
-                Request(
-                    "GET",
-                    f"https://gchat.qpic.cn/gchatpic_new/0/0-0-{self.data['md5'].upper()}/0",
-                )
-            )
-            if resp.status_code == 200:
-                return resp.content  # type: ignore
-        resp1 = await bot.adapter.request(
+        resp = await bot.adapter.request(
             Request(
                 "POST",
                 bot.info.api_base / "message" / "fetchRichMedia",
@@ -228,9 +219,9 @@ class MediaMessageSegment(MessageSegment):
                 },
             )
         )
-        if resp1.status_code == 200:
-            return resp1.content  # type: ignore
-        raise NetworkError("red", resp1)
+        if resp.status_code == 200:
+            return resp.content  # type: ignore
+        raise NetworkError("red", resp)
 
     async def upload(self, bot: "Bot") -> dict:
         data = self.data["file"] if self.data.get("file") else await self.download(bot)
