@@ -6,7 +6,7 @@ groups = ["default", "dev"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:9226512708bb76dd461eabf467802c90b86f994adab4fd508634dd51ca4f5024"
+content_hash = "sha256:10e5a42e647693ca50d12218f96063e2e7e7e7c9f92637b30386b14ac0eda735"
 
 [[package]]
 name = "anyio"
