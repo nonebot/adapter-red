@@ -68,6 +68,20 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
                 event.elements.pop(i)
 
 
+def _check_reply_me(bot: "Bot", event: MessageEvent) -> None:
+    first_element = event.elements[0]
+    if (
+        first_element.elementType == 7
+        and first_element.replyElement
+        and (
+            first_element.replyElement.senderUin == bot.self_id
+            or first_element.replyElement.senderUid == bot.self_id
+        )
+    ):
+        event.to_me = True
+        event.reply = event.elements.pop(0)
+
+
 def _check_nickname(bot: "Bot", event: MessageEvent) -> None:
     element = event.elements[0]
     if element.elementType != 1:
@@ -112,6 +126,7 @@ class Bot(BaseBot):
         # TODO: 检查事件是否有回复消息，调用平台 API 获取原始消息的消息内容
         if isinstance(event, MessageEvent):
             _check_at_me(self, event)
+            _check_reply_me(self, event)
             _check_nickname(self, event)
 
         await handle_event(self, event)
