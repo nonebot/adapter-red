@@ -8,8 +8,9 @@ from nonebot.utils import escape_tag
 from nonebot.adapters import Event as BaseEvent
 
 from .message import Message
+from .api.model import Element
 from .api.model import Message as MessageModel
-from .api.model import MsgType, ChatType, ShutUpTarget, Element
+from .api.model import MsgType, ChatType, ShutUpTarget
 
 
 class Event(BaseEvent):
@@ -56,7 +57,7 @@ class MessageEvent(Event, MessageModel):
     """消息事件"""
 
     to_me: bool = False
-    reply: Optional[Element]
+    reply: Optional[Element] = None
 
     @override
     def get_type(self) -> str:

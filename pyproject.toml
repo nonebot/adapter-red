@@ -1,6 +1,5 @@
 [project]
 name = "nonebot-adapter-red"
-version = "0.2.2"
 description = "Red Protocol Adapter for Nonebot2"
 authors = [
     {name = "zhaomaoniu"},
@@ -12,6 +11,12 @@ dependencies = [
 requires-python = ">=3.8"
 readme = "README.md"
 license = {text = "MIT"}
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://github.com/nonebot/adapter-red"
+repository = "https://github.com/nonebot/adapter-red"
+
 
 [build-system]
 requires = ["pdm-backend"]
@@ -27,6 +32,10 @@ dev = [
 ]
 [tool.pdm.build]
 includes = ["nonebot"]
+
+[tool.pdm.version]
+source = "file"
+path = "nonebot/adapters/red/__init__.py"
 
 [tool.black]
 line-length = 88
