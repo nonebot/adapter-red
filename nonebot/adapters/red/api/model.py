@@ -375,7 +375,6 @@ class Message(BaseModel):
     clientSeq: str
     nameType: int
     avatarFlag: int
-    replyElement: Optional[Element]
 
 
 class Profile(BaseModel):
