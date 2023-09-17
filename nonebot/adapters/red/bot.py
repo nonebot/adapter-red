@@ -68,14 +68,18 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
                 event.elements.pop(i)
 
 
-def _check_reply_me(bot:"Bot",event:MessageEvent) -> None:
+def _check_reply_me(bot: "Bot", event: MessageEvent) -> None:
     first_element = event.elements[0]
     if (
-        first_element.elementType ==7
+        first_element.elementType == 7
         and first_element.replyElement
-        and (first_element.replyElement.senderUin == bot.self_id or first_element.replyElement.senderUid == bot.self_id)
+        and (
+            first_element.replyElement.senderUin == bot.self_id
+            or first_element.replyElement.senderUid == bot.self_id
+        )
     ):
         event.to_me = True
+        event.replyElement = event.elements.pop(0)
 
 
 def _check_nickname(bot: "Bot", event: MessageEvent) -> None:
