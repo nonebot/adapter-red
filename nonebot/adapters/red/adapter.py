@@ -4,7 +4,6 @@ from typing_extensions import override
 from typing import Any, List, Type, Union, Optional
 
 from packaging.version import parse
-
 from nonebot.utils import escape_tag
 from nonebot.exception import NetworkError, WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
@@ -88,7 +87,7 @@ class Adapter(BaseAdapter):
                         bot = Bot(self, self_id, bot_info)
                         self.bot_connect(bot)
                         # TODO: 等待 betterqqnt 更新其 chronocat
-                        if parse(connect_data['payload']['version']) >= parse('1.0.0'):
+                        if parse(connect_data["payload"]["version"]) >= parse("1.0.0"):
                             log(
                                 "INFO",
                                 f"<y>Bot {escape_tag(self_id)}</y> connected, "
@@ -98,16 +97,16 @@ class Adapter(BaseAdapter):
                             log(
                                 "ERROR",
                                 "You are using a version of Chronocat that is "
-                                "actually older than the RedProtocol version showed."
+                                "actually older than the RedProtocol version showed.",
                             )
                             log(
                                 "ERROR",
                                 "Please consider using other red-procotol server "
-                                "like Chronocat LiteLoaderQQNT Plugin."
+                                "like Chronocat LiteLoaderQQNT Plugin.",
                             )
                             log(
                                 "ERROR",
-                                "otherwise, you may encounter some unexpected errors."
+                                "otherwise, you may encounter some unexpected errors.",
                             )
                         else:
                             log(
