@@ -79,7 +79,7 @@ def _check_reply_me(bot: "Bot", event: MessageEvent) -> None:
         )
     ):
         event.to_me = True
-        event.replyElement = event.elements.pop(0)
+        event.reply = event.elements.pop(0)
 
 
 def _check_nickname(bot: "Bot", event: MessageEvent) -> None:
