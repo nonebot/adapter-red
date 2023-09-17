@@ -34,7 +34,7 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
             event.elements.pop(0)
 
         # 处理at后的空格
-        if len(event.elements) >= 1:
+        if len(event.elements) > 1:
             second_element = event.elements[0]
             if (
                 second_element.elementType == 1
@@ -52,7 +52,7 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
                 and last_element.textElement
                 and last_element.textElement.atType == 0
                 and not last_element.textElement.content.strip()
-                and len(event.elements) >= 1
+                and len(event.elements) > 1
             ):
                 # 处理at后的空格
                 i -= 1
