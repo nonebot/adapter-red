@@ -56,7 +56,7 @@ class MessageEvent(Event, MessageModel):
     """消息事件"""
 
     to_me: bool = False
-    reply: Optional[Element]
+    reply: Optional[Element] = None
 
     @override
     def get_type(self) -> str:
