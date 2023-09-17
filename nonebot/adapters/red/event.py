@@ -8,9 +8,8 @@ from nonebot.utils import escape_tag
 from nonebot.adapters import Event as BaseEvent
 
 from .message import Message
-from .api.model import Element
 from .api.model import Message as MessageModel
-from .api.model import MsgType, ChatType, ShutUpTarget
+from .api.model import MsgType, ChatType, ShutUpTarget, Element
 
 
 class Event(BaseEvent):
