@@ -326,7 +326,7 @@ class Bot(BaseBot):
             size: 拉取多少个成员资料
         """
         resp = await self.call_api("get_members", group=group, size=size)
-        return [Member.parse_obj(data) for data in resp]
+        return [Member.parse_obj(data["detail"]) for data in resp]
 
     async def fetch(self, ms: BaseMessageSegment):
         """获取媒体消息段的二进制数据
