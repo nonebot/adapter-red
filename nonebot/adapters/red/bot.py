@@ -19,87 +19,113 @@ from .api.model import Profile, ChatType, UploadResponse
 from .message import Message, ForwardNode, MessageSegment, MediaMessageSegment
 
 
-def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
+def _check_reply(bot: "Bot", event: MessageEvent) -> None:
+    """检查消息中存在的回复，去除并赋值 `event.reply`, `event.to_me`。
+
+    参数:
+        bot: Bot 对象
+        event: MessageEvent 对象
+    """
+    try:
+        index = event.message.index("reply")
+    except ValueError:
+        return
+
+    msg_seg = event.message[index]
+
+    event.reply = msg_seg.data["origin"]  # type: ignore
+
+    # ensure string comparation
+    if str(event.reply.senderUin) == str(bot.self_id) or str(
+        event.reply.senderUid
+    ) == str(bot.self_id):
+        event.to_me = True
+
+    del event.message[index]
+    if len(event.message) > index and event.message[index].type == "at":
+        del event.message[index]
+    if len(event.message) > index and event.message[index].type == "text":
+        event.message[index].data["text"] = event.message[index].data["text"].lstrip()
+        if not event.message[index].data["text"]:
+            del event.message[index]
+    if not event.message:
+        event.message.append(MessageSegment.text(""))
+
+
+def _check_to_me(bot: "Bot", event: MessageEvent) -> None:
+    """检查消息开头或结尾是否存在 @机器人，去除并赋值 `event.to_me`。
+
+    参数:
+        bot: Bot 对象
+        event: MessageEvent 对象
+    """
+    if not isinstance(event, MessageEvent):
+        return
+
+    # ensure message not empty
+    if not event.message:
+        event.message.append(MessageSegment.text(""))
+
     if event.chatType == ChatType.FRIEND:
         event.to_me = True
     else:
-        first_element = event.elements[0]
-        if (
-            first_element.elementType == 1
-            and first_element.textElement
-            and first_element.textElement.atType == 2
-            and first_element.textElement.atNtUin == bot.self_id
-        ):
-            event.to_me = True
-            event.elements.pop(0)
 
-        # 处理at前的空格
-        if len(event.elements) > 1:
-            second_element = event.elements[0]
-            if (
-                second_element.elementType == 1
-                and second_element.textElement
-                and second_element.textElement.atType == 0
-                and not second_element.textElement.content.strip()
-            ):
-                event.elements.pop(0)
+        def _is_at_me_seg(segment: MessageSegment) -> bool:
+            return segment.type == "at" and str(segment.data.get("user_id", "")) == str(
+                bot.self_id
+            )
+
+        # check the first segment
+        if _is_at_me_seg(event.message[0]):
+            event.to_me = True
+            event.message.pop(0)
+            if event.message and event.message[0].type == "text":
+                event.message[0].data["text"] = event.message[0].data["text"].lstrip()
+                if not event.message[0].data["text"]:
+                    del event.message[0]
 
         if not event.to_me:
+            # check the last segment
             i = -1
-            last_element = event.elements[i]
+            last_msg_seg = event.message[i]
             if (
-                last_element.elementType == 1
-                and last_element.textElement
-                and last_element.textElement.atType == 0
-                and not last_element.textElement.content.strip()
-                and len(event.elements) > 1
+                last_msg_seg.type == "text"
+                and not last_msg_seg.data["text"].strip()
+                and len(event.message) >= 2
             ):
-                # 处理at后的空格
                 i -= 1
-                last_element = event.elements[i]
+                last_msg_seg = event.message[i]
 
-            if (
-                last_element.elementType == 1
-                and last_element.textElement
-                and last_element.textElement.atType == 2
-                and last_element.textElement.atNtUin == bot.self_id
-            ):
+            if _is_at_me_seg(last_msg_seg):
                 event.to_me = True
-                event.elements.pop(i)
+                del event.message[i:]
 
-
-def _check_reply_me(bot: "Bot", event: MessageEvent) -> None:
-    first_element = event.elements[0]
-    if (
-        first_element.elementType == 7
-        and first_element.replyElement
-        and (
-            first_element.replyElement.senderUin == bot.self_id
-            or first_element.replyElement.senderUid == bot.self_id
-        )
-    ):
-        event.to_me = True
-        event.reply = event.elements.pop(0)
+        if not event.message:
+            event.message.append(MessageSegment.text(""))
 
 
 def _check_nickname(bot: "Bot", event: MessageEvent) -> None:
-    element = event.elements[0]
-    if element.elementType != 1:
+    """检查消息开头是否存在昵称，去除并赋值 `event.to_me`。
+
+    参数:
+        bot: Bot 对象
+        event: MessageEvent 对象
+    """
+    first_msg_seg = event.message[0]
+    if first_msg_seg.type != "text":
         return
 
     nicknames = {re.escape(n) for n in bot.config.nickname}
     if not nicknames:
         return
 
+    # check if the user is calling me with my nickname
     nickname_regex = "|".join(nicknames)
-    if element.textElement is not None and element.textElement.content:
-        if m := re.search(
-            rf"^({nickname_regex})([\s,，]*|$)",
-            element.textElement.content,
-            re.IGNORECASE,
-        ):
-            event.to_me = True
-            element.textElement.content = element.textElement.content[m.end() :]
+    first_text = first_msg_seg.data["text"]
+    if m := re.search(rf"^({nickname_regex})([\s,，]*|$)", first_text, re.IGNORECASE):
+        log("DEBUG", f"User is calling me {m[1]}")
+        event.to_me = True
+        first_msg_seg.data["text"] = first_text[m.end() :]
 
 
 def get_peer_data(event: Event, **kwargs: Any) -> Tuple[int, str]:
@@ -125,8 +151,8 @@ class Bot(BaseBot):
     async def handle_event(self, event: Event):
         # TODO: 检查事件是否有回复消息，调用平台 API 获取原始消息的消息内容
         if isinstance(event, MessageEvent):
-            _check_reply_me(self, event)
-            _check_at_me(self, event)
+            _check_reply(self, event)
+            _check_to_me(self, event)
             _check_nickname(self, event)
 
         await handle_event(self, event)
