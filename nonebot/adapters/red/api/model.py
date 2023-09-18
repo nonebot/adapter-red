@@ -359,8 +359,8 @@ class Message(BaseModel):
     peerName: str
     editable: bool
     avatarMeta: str
-    avatarPendant: str
-    feedId: str
+    avatarPendant: Optional[str]
+    feedId: Optional[str]
     roleId: str
     timeStamp: str
     isImportMsg: bool
@@ -373,8 +373,8 @@ class Message(BaseModel):
     isOnlineMsg: bool
     generalFlags: str
     clientSeq: str
-    nameType: int
-    avatarFlag: int
+    nameType: Optional[int]
+    avatarFlag: Optional[int]
 
 
 class Profile(BaseModel):

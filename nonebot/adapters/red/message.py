@@ -388,8 +388,29 @@ class Message(BaseMessage[MessageSegment]):
                     }
                 )
             elif seg.type == "file":
-                raise NotImplementedError(
-                    "Unsupported MessageSegment type: " f"{seg.type}"
+                if TYPE_CHECKING:
+                    assert isinstance(seg, MediaMessageSegment)
+                resp = await seg.upload(bot)
+                file = Path(resp.ntFilePath)
+                res.append(
+                    {
+                        "elementType": 3,
+                        "fileElement": {
+                            "fileMd5": resp.md5,
+                            "fileSize": resp.fileSize,
+                            "fileName": file.name,
+                            "filePath": resp.ntFilePath,
+                            "picHeight": 0,
+                            "picWidth": 0,
+                            "picThumbPath": {},
+                            "file10MMd5": "",
+                            "fileSha": "",
+                            "fileSha3": "",
+                            "fileUuid": "",
+                            "fileSubId": "",
+                            "thumbFileSize": 750,
+                        },
+                    }
                 )
             elif seg.type == "voice":
                 if TYPE_CHECKING:
