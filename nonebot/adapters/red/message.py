@@ -306,6 +306,7 @@ class Message(BaseMessage[MessageSegment]):
                     MessageSegment(
                         "reply",
                         {
+                            "origin": reply,
                             "msg_id": reply.sourceMsgIdInRecords,
                             "msg_seq": reply.replayMsgSeq,
                             "sender_uid": reply.senderUid,

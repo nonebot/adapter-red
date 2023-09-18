@@ -1,16 +1,17 @@
 import re
-from typing import Any, Optional
+from copy import deepcopy
+from typing import Any, Dict, Optional
 from typing_extensions import override
 from datetime import datetime, timedelta
 
 from nonebot.utils import escape_tag
+from pydantic.class_validators import root_validator
 
 from nonebot.adapters import Event as BaseEvent
 
 from .message import Message
-from .api.model import Element
 from .api.model import Message as MessageModel
-from .api.model import MsgType, ChatType, ShutUpTarget
+from .api.model import MsgType, ChatType, ReplyElement, ShutUpTarget
 
 
 class Event(BaseEvent):
@@ -57,7 +58,19 @@ class MessageEvent(Event, MessageModel):
     """消息事件"""
 
     to_me: bool = False
-    reply: Optional[Element] = None
+    """
+    :说明: 消息是否与机器人有关
+
+    :类型: ``bool``
+    """
+    reply: Optional[ReplyElement] = None
+    """
+    :说明: 消息中提取的回复消息，内容为 ``get_msg`` API 返回结果
+
+    :类型: ``Optional[ReplyElement]``
+    """
+    message: Message
+    original_message: Message
 
     @override
     def get_type(self) -> str:
@@ -70,19 +83,19 @@ class MessageEvent(Event, MessageModel):
 
     @override
     def get_message(self) -> Message:
-        # 获取事件消息的方法，根据事件具体实现，如果事件非消息类型事件，则抛出异常
-        if not hasattr(self, "_message"):
-            setattr(
-                self,
-                "_message",
-                Message.from_red_message(
-                    self.elements,
-                    self.msgId,  # type: ignore
-                    self.chatType,  # type: ignore
-                    self.peerUin or self.peerUid,  # type: ignore
-                ),
+        return self.message
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_message(cls, values: Dict[str, Any]) -> Dict[str, Any]:
+        if "elements" in values:
+            values["message"] = Message.from_red_message(
+                values["elements"],
+                values["msgId"],
+                values["chatType"],
+                values["peerUin"] or values["peerUid"],
             )
-        return getattr(self, "_message")
+            values["original_message"] = deepcopy(values["message"])
+        return values
 
     @override
     def get_user_id(self) -> str:
