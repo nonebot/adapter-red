@@ -28,8 +28,9 @@ class MessageSegment(BaseMessageSegment["Message"]):
 
     @override
     def __str__(self) -> str:
+        shown_data = {k: v for k, v in self.data.items() if not k.startswith("_")}
         # 返回该消息段的纯文本表现形式，通常在日志中展示
-        return self.data["text"] if self.is_text() else f"[{self.type}: {self.data}]"
+        return self.data["text"] if self.is_text() else f"[{self.type}: {shown_data}]"
 
     @override
     def is_text(self) -> bool:
@@ -88,11 +89,11 @@ class MessageSegment(BaseMessageSegment["Message"]):
     def reply(
         message_seq: str,
         message_id: Optional[str] = None,
-        sender_uid: Optional[str] = None,
+        sender_uin: Optional[str] = None,
     ) -> "MessageSegment":
         return MessageSegment(
             "reply",
-            {"msg_id": message_id, "msg_seq": message_seq, "sender_uid": sender_uid},
+            {"msg_id": message_id, "msg_seq": message_seq, "sender_uin": sender_uin},
         )
 
     @staticmethod
@@ -306,10 +307,10 @@ class Message(BaseMessage[MessageSegment]):
                     MessageSegment(
                         "reply",
                         {
-                            "origin": reply,
+                            "_origin": reply,
                             "msg_id": reply.sourceMsgIdInRecords,
                             "msg_seq": reply.replayMsgSeq,
-                            "sender_uid": reply.senderUid,
+                            "sender_uin": reply.senderUid,
                         },
                     )
                 )
@@ -433,7 +434,7 @@ class Message(BaseMessage[MessageSegment]):
                         "replyElement": {
                             "sourceMsgIdInRecords": seg.data["msg_id"],
                             "replayMsgSeq": seg.data["msg_seq"],
-                            "senderUid": seg.data["sender_uid"],
+                            "senderUid": seg.data["sender_uin"],
                         },
                     }
                 )
@@ -454,7 +455,7 @@ class Message(BaseMessage[MessageSegment]):
 
 @dataclass
 class ForwardNode:
-    uid: str
+    uin: str
     name: str
     group: Union[int, str]
     message: Message
@@ -501,7 +502,7 @@ class ForwardNode:
                 elems.append({"text": {"str": f"[{seg.type}]"}})
         return {
             "head": {
-                "field2": self.uid,
+                "field2": self.uin,
                 "field8": {
                     "field1": int(self.group),
                     "field4": self.name,

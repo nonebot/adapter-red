@@ -334,8 +334,8 @@ class Message(BaseModel):
     msgType: MsgType
     subMsgType: int
     sendType: int
-    senderUid: str
-    senderUin: Optional[str]
+    senderUid: Optional[str]
+    senderUin: str
     peerUid: str
     peerUin: Optional[str]
     channelId: str
