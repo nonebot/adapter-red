@@ -33,8 +33,8 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
             event.to_me = True
             event.elements.pop(0)
 
-        # 处理at后的空格
-        if len(event.elements) >= 1:
+        # 处理at前的空格
+        if len(event.elements) > 1:
             second_element = event.elements[0]
             if (
                 second_element.elementType == 1
@@ -52,7 +52,7 @@ def _check_at_me(bot: "Bot", event: MessageEvent) -> None:
                 and last_element.textElement
                 and last_element.textElement.atType == 0
                 and not last_element.textElement.content.strip()
-                and len(event.elements) >= 1
+                and len(event.elements) > 1
             ):
                 # 处理at后的空格
                 i -= 1
@@ -125,8 +125,8 @@ class Bot(BaseBot):
     async def handle_event(self, event: Event):
         # TODO: 检查事件是否有回复消息，调用平台 API 获取原始消息的消息内容
         if isinstance(event, MessageEvent):
-            _check_at_me(self, event)
             _check_reply_me(self, event)
+            _check_at_me(self, event)
             _check_nickname(self, event)
 
         await handle_event(self, event)
