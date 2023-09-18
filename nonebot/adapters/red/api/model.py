@@ -336,7 +336,7 @@ class Message(BaseModel):
     sendType: int
     senderUid: Optional[str]
     senderUin: Optional[str]  # TODO: 等待 chronocat 0.0.43 修复
-    peerUid: str
+    peerUid: Optional[str]  # TODO: 等待 chronocat 0.0.43 修复
     peerUin: Optional[str]
     channelId: str
     guildId: str
