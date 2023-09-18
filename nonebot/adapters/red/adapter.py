@@ -4,8 +4,8 @@ from typing_extensions import override
 from typing import Any, List, Type, Union, Optional
 
 from packaging.version import parse
-from pydantic import ValidationError
 from nonebot.utils import escape_tag
+from pydantic import ValidationError
 from nonebot.exception import NetworkError, WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
 
