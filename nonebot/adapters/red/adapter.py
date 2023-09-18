@@ -4,6 +4,7 @@ from typing_extensions import override
 from typing import Any, List, Type, Union, Optional
 
 from packaging.version import parse
+from pydantic import ValidationError
 from nonebot.utils import escape_tag
 from nonebot.exception import NetworkError, WebSocketClosed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
@@ -165,7 +166,15 @@ class Adapter(BaseAdapter):
                     asyncio.create_task(bot.handle_event(event))
 
             def _handle_message(message: dict):
-                _data = MessageModel.parse_obj(message)
+                try:
+                    _data = MessageModel.parse_obj(message)
+                except ValidationError as e:
+                    log(
+                        "WARNING",
+                        f"Failed to parse message data: {message}",
+                        e,
+                    )
+                    return
                 if _data.msgType == MsgType.system and _data.sendType == 3:
                     if (
                         _data.subMsgType == 8

@@ -33,7 +33,7 @@ def _check_reply(bot: "Bot", event: MessageEvent) -> None:
 
     msg_seg = event.message[index]
 
-    event.reply = msg_seg.data["origin"]  # type: ignore
+    event.reply = msg_seg.data["_origin"]  # type: ignore
 
     # ensure string comparation
     if str(event.reply.senderUin) == str(bot.self_id) or str(
