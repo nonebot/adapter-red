@@ -366,7 +366,9 @@ class Message(BaseMessage[MessageSegment]):
                         "textElement": {
                             "atType": 2,
                             "atNtUin": seg.data["user_id"],
-                            "content": f"@{seg.data['user_name'] or seg.data['user_id']}",
+                            "content": (
+                                f"@{seg.data['user_name'] or seg.data['user_id']}"
+                            ),
                         },
                     }
                 )
