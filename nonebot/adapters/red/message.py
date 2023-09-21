@@ -197,7 +197,9 @@ class Message(BaseMessage[MessageSegment]):
                     msg.append(MessageSegment.at_all())
                 elif text.atType == 2:
                     msg.append(
-                        MessageSegment.at(text.atNtUin or text.atNtUid, text.content[1:])
+                        MessageSegment.at(
+                            text.atNtUin or text.atNtUid, text.content[1:]
+                        )
                     )  # type: ignore  # noqa: E501
             if element.elementType == 2:
                 if TYPE_CHECKING:
@@ -312,7 +314,8 @@ class Message(BaseMessage[MessageSegment]):
                             "_origin": reply,
                             "msg_id": reply.sourceMsgIdInRecords,
                             "msg_seq": reply.replayMsgSeq,
-                            "sender_uin": reply.senderUin,
+                            # reply 元素仍然只有 senderUid
+                            "sender_uin": reply.senderUid,
                         },
                     )
                 )
@@ -368,7 +371,7 @@ class Message(BaseMessage[MessageSegment]):
                         "textElement": {
                             "atType": 2,
                             "atNtUin": seg.data["user_id"],
-                            "content": f"@{seg.data['user_name'] or seg.data['user_id']}",
+                            "content": f"@{seg.data['user_name'] or seg.data['user_id']}",  # noqa: E501
                         },
                     }
                 )
