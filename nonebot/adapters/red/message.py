@@ -42,8 +42,8 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MessageSegment("text", {"text": text})
 
     @staticmethod
-    def at(user_id: str) -> "MessageSegment":
-        return MessageSegment("at", {"user_id": user_id})
+    def at(user_id: str, user_name: Optional[str] = None) -> "MessageSegment":
+        return MessageSegment("at", {"user_id": user_id, "user_name": user_name})
 
     @staticmethod
     def at_all() -> "MessageSegment":
@@ -310,7 +310,7 @@ class Message(BaseMessage[MessageSegment]):
                             "_origin": reply,
                             "msg_id": reply.sourceMsgIdInRecords,
                             "msg_seq": reply.replayMsgSeq,
-                            "sender_uin": reply.senderUid,
+                            "sender_uin": reply.senderUin,
                         },
                     )
                 )
@@ -363,7 +363,13 @@ class Message(BaseMessage[MessageSegment]):
                 res.append(
                     {
                         "elementType": 1,
-                        "textElement": {"atType": 2, "atNtUin": seg.data["user_id"]},
+                        "textElement": {
+                            "atType": 2,
+                            "atNtUin": seg.data["user_id"],
+                            "content": (
+                                f"@{seg.data['user_name'] or seg.data['user_id']}"
+                            ),
+                        },
                     }
                 )
             elif seg.type == "at_all":
@@ -453,9 +459,9 @@ class Message(BaseMessage[MessageSegment]):
                     {
                         "elementType": 7,
                         "replyElement": {
-                            "sourceMsgIdInRecords": seg.data["msg_id"],
+                            "replayMsgId": seg.data["msg_id"],
                             "replayMsgSeq": seg.data["msg_seq"],
-                            "senderUid": seg.data["sender_uin"],
+                            "senderUin": seg.data["sender_uin"],
                         },
                     }
                 )
