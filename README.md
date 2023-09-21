@@ -12,6 +12,8 @@ _✨ NoneBot2 Red Protocol适配器 / Red Protocol Adapter for NoneBot2 ✨_
 
 请按照 [Chronocat](https://chronocat.vercel.app) 的指引安装。
 
+**目前推荐版本为 `v0.0.45`**
+
 ## 配置
 
 修改 NoneBot 配置文件 `.env` 或者 `.env.*`。
