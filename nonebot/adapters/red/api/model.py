@@ -335,8 +335,8 @@ class Message(BaseModel):
     subMsgType: int
     sendType: int
     senderUid: Optional[str]
-    senderUin: Optional[str]  # TODO: 等待 chronocat 0.0.43 修复
-    peerUid: Optional[str]  # TODO: 等待 chronocat 0.0.43 修复
+    senderUin: Optional[str]
+    peerUid: Optional[str]
     peerUin: Optional[str]
     channelId: str
     guildId: str
@@ -351,7 +351,7 @@ class Message(BaseModel):
     guildName: str
     channelName: str
     elements: List[Element]
-    records: List[Any]
+    records: List["Message"]
     emojiLikesList: List[Any]
     commentCnt: str
     directMsgFlag: int

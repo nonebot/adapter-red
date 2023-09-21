@@ -196,7 +196,9 @@ class Message(BaseMessage[MessageSegment]):
                 elif text.atType == 1:
                     msg.append(MessageSegment.at_all())
                 elif text.atType == 2:
-                    msg.append(MessageSegment.at(text.atNtUin or text.atNtUid))  # type: ignore  # noqa: E501
+                    msg.append(
+                        MessageSegment.at(text.atNtUin or text.atNtUid, text.content[1:])
+                    )  # type: ignore  # noqa: E501
             if element.elementType == 2:
                 if TYPE_CHECKING:
                     assert element.picElement
@@ -366,9 +368,7 @@ class Message(BaseMessage[MessageSegment]):
                         "textElement": {
                             "atType": 2,
                             "atNtUin": seg.data["user_id"],
-                            "content": (
-                                f"@{seg.data['user_name'] or seg.data['user_id']}"
-                            ),
+                            "content": f"@{seg.data['user_name'] or seg.data['user_id']}",
                         },
                     }
                 )
@@ -462,6 +462,7 @@ class Message(BaseMessage[MessageSegment]):
                             "replayMsgId": seg.data["msg_id"],
                             "replayMsgSeq": seg.data["msg_seq"],
                             "senderUin": seg.data["sender_uin"],
+                            "sebderUinStr": str(seg.data["sender_uin"]),
                         },
                     }
                 )
