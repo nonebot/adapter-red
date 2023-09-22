@@ -1,6 +1,6 @@
 ---
 name: Feature 特性请求
-about: 为 Nonebot-Plugin-Alconna 加份菜
+about: 为适配器加份菜
 title: "[Feature] "
 labels: enhancement, triage
 assignees: ""
