@@ -118,6 +118,15 @@ class MessageEvent(Event, MessageModel):
         """群组或好友的id"""
         return self.peerUin or self.peerUid
 
+    @property
+    def is_group(self) -> bool:
+        """是否为群组消息"""
+        return self.chatType == ChatType.GROUP
+
+    @property
+    def is_private(self) -> bool:
+        """是否为私聊消息"""
+        return self.chatType == ChatType.FRIEND
 
 class PrivateMessageEvent(MessageEvent):
     """好友消息事件"""

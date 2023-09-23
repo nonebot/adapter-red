@@ -33,6 +33,15 @@ class Adapter(BaseAdapter):
         super().__init__(driver, **kwargs)
         # 读取适配器所需的配置项
         self.red_config: Config = Config.parse_obj(self.config)
+        self._bots = self.red_config.red_bots
+        if self.red_config.red_auto_detect and not self._bots:
+            try:
+                from .auto_detect import get_config  # type: ignore
+                log("INFO", "Auto detect chronocat config...")
+                self._bots = get_config()
+                log("SUCCESS", f"Auto detect {len(self._bots)} bots.")
+            except ImportError:
+                log("ERROR", "Please install `PyYAML` to enable auto detect!")
         self.tasks: List[asyncio.Task] = []  # 存储 ws 任务
         self.setup()
 
@@ -56,7 +65,12 @@ class Adapter(BaseAdapter):
 
     async def startup(self) -> None:
         """定义启动时的操作，例如和平台建立连接"""
-        for bot in self.red_config.red_bots:
+        if not self._bots:
+            raise RuntimeError(
+                "No bots found in config! \n"
+                "Please check your config file and make sure it's correct."
+            )
+        for bot in self._bots:
             self.tasks.append(asyncio.create_task(self._forward_ws(bot)))
 
     async def shutdown(self) -> None:

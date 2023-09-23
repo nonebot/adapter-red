@@ -29,6 +29,16 @@ DRIVER=~httpx+~websockets
 DRIVER=~aiohttp
 ```
 
+### RED_AUTO_DETECT
+
+是否自动检测 Chronocat 的配置文件 `~/chronocat.yml` 并读取内容，默认为 `False`。
+
+该配置项需要在 `Chronocat` 版本 `v0.0.46` 以上才可用。
+
+使用该配置项时，你需要通过 `pip install nonebot-adapter-red[auto_detect]` 安装 `nonebot-adapter-red`。
+
+**如果你已经配置了 `RED_BOTS`，则该配置项不会生效。**
+
 ### RED_BOTS
 
 配置机器人帐号，如：
@@ -45,10 +55,10 @@ RED_BOTS='
 '
 ```
 
-其中 `port` 暂时一律为 `16530`
+其中 `port` 默认为 `16530`，可以在 Chronocat 的 `~/chronocat.yml` 中修改。
 
 `token` 被默认存储在 %AppData%/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN 或 ~/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN 中，
-首次启动 Chronocat 时会自动生成，并保持不变。
+首次启动 Chronocat 时会自动生成，并保持不变。同时，你也可以在 `~/chronocat.yml` 中获取或修改 `token`。
 
 `host` 为运行 QQNT 的设备主机，默认为 `localhost`。
 
@@ -89,5 +99,6 @@ matcher = on_command("test")
 
 @matcher.handle()
 async def handle_receive(bot: Bot, event: MessageEvent):
-    await bot.send_group_message(event.scene, MessageSegment.image(Path("path/to/img.jpg")))
+    if event.is_group:
+        await bot.send_group_message(event.scene, MessageSegment.image(Path("path/to/img.jpg")))
 ```
