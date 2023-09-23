@@ -447,10 +447,10 @@ class Group(BaseModel):
 class ImageInfo(BaseModel):
     width: int
     height: int
-    type: str
-    mime: str
-    wUnits: str
-    hUnits: str
+    type: Optional[str]
+    mime: Optional[str]
+    wUnits: Optional[str]
+    hUnits: Optional[str]
 
 
 class UploadResponse(BaseModel):
