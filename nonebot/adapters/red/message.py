@@ -465,7 +465,7 @@ class Message(BaseMessage[MessageSegment]):
                             "replayMsgId": seg.data["msg_id"],
                             "replayMsgSeq": seg.data["msg_seq"],
                             "senderUin": seg.data["sender_uin"],
-                            "sebderUinStr": str(seg.data["sender_uin"]),
+                            "senderUinStr": str(seg.data["sender_uin"]),
                         },
                     }
                 )

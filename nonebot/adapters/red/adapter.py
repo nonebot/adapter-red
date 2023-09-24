@@ -116,7 +116,7 @@ class Adapter(BaseAdapter):
                             )
                             log(
                                 "ERROR",
-                                "Please consider using other red-procotol server "
+                                "Please consider using other red-protocol server "
                                 "like Chronocat LiteLoaderQQNT Plugin.",
                             )
                             log(
