@@ -128,6 +128,7 @@ class MessageEvent(Event, MessageModel):
         """是否为私聊消息"""
         return self.chatType == ChatType.FRIEND
 
+
 class PrivateMessageEvent(MessageEvent):
     """好友消息事件"""
 

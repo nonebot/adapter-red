@@ -37,6 +37,7 @@ class Adapter(BaseAdapter):
         if self.red_config.red_auto_detect and not self._bots:
             try:
                 from .auto_detect import get_config  # type: ignore
+
                 log("INFO", "Auto detect chronocat config...")
                 self._bots = get_config()
                 log("SUCCESS", f"Auto detect {len(self._bots)} bots.")
@@ -116,7 +117,7 @@ class Adapter(BaseAdapter):
                             )
                             log(
                                 "ERROR",
-                                "Please consider using other red-procotol server "
+                                "Please consider using other red-protocol server "
                                 "like Chronocat LiteLoaderQQNT Plugin.",
                             )
                             log(
