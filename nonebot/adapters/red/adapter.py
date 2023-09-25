@@ -15,8 +15,8 @@ from .bot import Bot
 from .utils import log
 from .api.model import MsgType
 from .api.handle import HANDLERS
-from .config import Config, BotInfo
 from .api.model import Message as MessageModel
+from .config import Config, BotInfo, get_config
 from .event import (
     Event,
     MemberAddEvent,
@@ -36,8 +36,6 @@ class Adapter(BaseAdapter):
         self._bots = self.red_config.red_bots
         if self.red_config.red_auto_detect and not self._bots:
             try:
-                from .auto_detect import get_config  # type: ignore
-
                 log("INFO", "Auto detect chronocat config...")
                 self._bots = get_config()
                 log("SUCCESS", f"Auto detect {len(self._bots)} bots.")

@@ -6,4 +6,4 @@ from .message import MessageSegment as MessageSegment
 from .event import GroupMessageEvent as GroupMessageEvent
 from .event import PrivateMessageEvent as PrivateMessageEvent
 
-__version__ = "0.4.2"
+__version__ = "0.5.0"

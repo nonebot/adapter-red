@@ -12,7 +12,7 @@ _✨ NoneBot2 Red Protocol适配器 / Red Protocol Adapter for NoneBot2 ✨_
 
 请按照 [Chronocat](https://chronocat.vercel.app) 的指引安装。
 
-**目前推荐版本为 `v0.0.45`**
+**目前推荐版本为 `v0.0.46`**
 
 ## 配置
 
@@ -31,7 +31,9 @@ DRIVER=~aiohttp
 
 ### RED_AUTO_DETECT
 
-是否自动检测 Chronocat 的配置文件 `~/chronocat.yml` 并读取内容，默认为 `False`。
+是否自动检测 Chronocat 的配置文件 `~/.chronocat/config/chronocat.yml` 并读取内容，默认为 `False`。
+
+配置文件详细内容请参考 [Chronocat/config](https://chronocat.vercel.app/config/)。
 
 该配置项需要在 `Chronocat` 版本 `v0.0.46` 以上才可用。
 
@@ -55,12 +57,52 @@ RED_BOTS='
 '
 ```
 
-其中 `port` 默认为 `16530`，可以在 Chronocat 的 `~/chronocat.yml` 中修改。
+你需要从 Chronocat 的配置文件 `~/.chronocat/config/chronocat.yml` 中获取 `port`、`token`、`host`。
 
-`token` 被默认存储在 %AppData%/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN 或 ~/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN 中，
-首次启动 Chronocat 时会自动生成，并保持不变。同时，你也可以在 `~/chronocat.yml` 中获取或修改 `token`。
+在单账号下，
+- `port` 与配置文件下的 `servers[X].port` 一致
+- `token` 与配置文件下的 `servers[X].token` 一致
+- `host` 与配置文件下的 `servers[X].listen` 一致
 
-`host` 为运行 QQNT 的设备主机，默认为 `localhost`。
+```yaml
+# ~/.chronocat/config/chronocat.yml
+servers:
+  - type: red
+    # Chronocat 已经自动生成了随机 token。要妥善保存哦！
+    # 客户端使用服务时需要提供这个 token！
+    token: DEFINE_CHRONO_TOKEN  # token
+    # Chronocat 开启 red 服务的端口，默认为 16530。
+    port: 16530  # port
+    # 服务器监听的地址。 如果你不知道这是什么，那么不填此项即可！
+    listen: localhost  # host
+```
+
+而多账号下，
+- `port` 与配置文件下下的 `overrides[QQ].servers[X].port` 一致，并且一个 `QQ` 只能对应一个 `port`
+- `token` 与配置文件下下的 `overrides[QQ].servers[X].token` 一致
+- `host` 与配置文件下下的 `overrides[QQ].servers[X].listen` 一致
+
+```yaml
+# ~/.chronocat/config/chronocat.yml
+overrides:
+  1234567890:
+    servers:
+      - type: red
+        # Chronocat 已经自动生成了随机 token。要妥善保存哦！
+        # 客户端使用服务时需要提供这个 token！
+        token: DEFINE_CHRONO_TOKEN  # token
+        # Chronocat 开启 red 服务的端口，默认为 16530。
+        port: 16531  # port
+        # 服务器监听的地址。 如果你不知道这是什么，那么不填此项即可！
+        listen: localhost
+```
+
+#### 旧版 Chronocat
+
+对于旧版的 Chronocat，
+- `port` 是默认的 `16530`
+- `token` 被默认存储在 `%AppData%/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN` 或 `~/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN` 中，并保持不变。
+- `host` 默认为 `localhost`。
 
 
 ## 功能
