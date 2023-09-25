@@ -396,15 +396,15 @@ class Profile(BaseModel):
     isSpecialCareZone: bool
     ringId: str
     status: int
-    extStatus: int
+    extStatus: Optional[int]
     categoryId: int
     onlyChat: bool
     qzoneNotWatch: bool
     qzoneNotWatched: bool
-    vipFlag: bool
-    yearVipFlag: bool
-    svipFlag: bool
-    vipLevel: int
+    vipFlag: Optional[bool]
+    yearVipFlag: Optional[bool]
+    svipFlag: Optional[bool]
+    vipLevel: Optional[int]
 
 
 class Member(BaseModel):
