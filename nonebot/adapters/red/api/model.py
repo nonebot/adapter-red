@@ -52,7 +52,7 @@ class MemberAdd(BaseModel):
 
 
 class ShutUpTarget(BaseModel):
-    uid: str
+    uid: Optional[str]
     card: str
     name: str
     role: int
