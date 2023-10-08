@@ -3,10 +3,9 @@ import asyncio
 from typing_extensions import override
 from typing import Any, List, Type, Union, Optional
 
-from packaging.version import parse
 from nonebot.utils import escape_tag
 from pydantic import ValidationError
-from nonebot.exception import NetworkError, WebSocketClosed
+from nonebot.exception import NetworkError, WebSocketClosed, ActionFailed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
 
 from nonebot.adapters import Adapter as BaseAdapter
@@ -100,35 +99,12 @@ class Adapter(BaseAdapter):
                         self_id = connect_data["payload"]["authData"]["uin"]
                         bot = Bot(self, self_id, bot_info)
                         self.bot_connect(bot)
-                        # TODO: 等待 betterqqnt 更新其 chronocat
-                        if parse(connect_data["payload"]["version"]) >= parse("1.0.0"):
-                            log(
-                                "INFO",
-                                f"<y>Bot {escape_tag(self_id)}</y> connected, "
-                                f"RedProtocol Version: "
-                                f"{connect_data['payload']['version']}",
-                            )
-                            log(
-                                "ERROR",
-                                "You are using a version of Chronocat that is "
-                                "actually older than the RedProtocol version showed.",
-                            )
-                            log(
-                                "ERROR",
-                                "Please consider using other red-protocol server "
-                                "like Chronocat LiteLoaderQQNT Plugin.",
-                            )
-                            log(
-                                "ERROR",
-                                "otherwise, you may encounter some unexpected errors.",
-                            )
-                        else:
-                            log(
-                                "INFO",
-                                f"<y>Bot {escape_tag(self_id)}</y> connected, "
-                                f"Chronocat Version: "
-                                f"{connect_data['payload']['version']}",
-                            )
+                        log(
+                            "INFO",
+                            f"<y>Bot {escape_tag(self_id)}</y> connected, "
+                            f"Chronocat Version: "
+                            f"{connect_data['payload']['version']}",
+                        )
                         await self._loop(bot, ws)
                     except WebSocketClosed as e:
                         log(
@@ -266,7 +242,14 @@ class Adapter(BaseAdapter):
 
     @override
     async def request(self, setup: Request):
-        resp = await super().request(setup)
+        try:
+            resp = await super().request(setup)
+        except Exception as e:
+            raise NetworkError(f"Failed to request {setup.url}") from e
         if resp.status_code != 200:
-            raise NetworkError("Unauthorized!")
+            raise ActionFailed(
+                self.get_name(),
+                f"HTTP status code {resp.status_code} "
+                f"response body: {resp.content}"
+            )
         return resp
