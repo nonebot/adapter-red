@@ -5,8 +5,8 @@ from typing import Any, List, Type, Union, Optional
 
 from nonebot.utils import escape_tag
 from pydantic import ValidationError
-from nonebot.exception import NetworkError, WebSocketClosed, ActionFailed
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
+from nonebot.exception import ActionFailed, NetworkError, WebSocketClosed
 
 from nonebot.adapters import Adapter as BaseAdapter
 
@@ -250,6 +250,6 @@ class Adapter(BaseAdapter):
             raise ActionFailed(
                 self.get_name(),
                 f"HTTP status code {resp.status_code} "
-                f"response body: {resp.content}"
+                f"response body: {resp.content}",
             )
         return resp
