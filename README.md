@@ -12,7 +12,13 @@ _✨ NoneBot2 Red Protocol适配器 / Red Protocol Adapter for NoneBot2 ✨_
 
 请按照 [Chronocat](https://chronocat.vercel.app) 的指引安装。
 
-**目前推荐版本为 `v0.0.46`**
+**目前推荐版本为 `v0.0.51`**
+
+## 迁移指南
+
+如果你原先为 `go-cqhttp` 用户，可以参考 [迁移指南](./migrate.md) 来修改你的插件。
+
+**首次使用者同样可以参考该指南。**
 
 ## 配置
 
@@ -28,6 +34,8 @@ _✨ NoneBot2 Red Protocol适配器 / Red Protocol Adapter for NoneBot2 ✨_
 DRIVER=~httpx+~websockets
 DRIVER=~aiohttp
 ```
+
+关于 `ForwardDriver` ，参考 [Driver](https://nonebot.dev/docs/advanced/driver)。
 
 ### RED_AUTO_DETECT
 
