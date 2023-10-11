@@ -1,5 +1,5 @@
 ---
-name: Feature 特性请求
+name: 功能建议 (Classic)
 about: 为适配器加份菜
 title: "[Feature] "
 labels: enhancement, triage
@@ -9,7 +9,7 @@ assignees: ""
 ## 请确认：
 <!-- 确认后，请将方括号的空格替换为 x -->
 * [ ] 新特性的目的明确
-* [ ] 我已经阅读了[相关文档](https://chronocat.vercel.app) 并且找不到类似特性
+* [ ] 我已经使用过该项目并且了解其功能
 
 
 ## Feature

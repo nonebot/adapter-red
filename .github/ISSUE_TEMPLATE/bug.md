@@ -1,5 +1,5 @@
 ---
-name: Bug 报告
+name: Bug 反馈 (Classic)
 about: 有关 bug 的报告
 title: "[Bug]"
 labels: bug, triage
@@ -28,7 +28,12 @@ assignees: ""
 - Python 版本: 
 - Nonebot2 版本:
 - Chronocat 版本: 
-- 是否使用 `BetterQQNT`:
+- Red 适配器版本:
+
+## 配置文件
+<!-- 请将你的 .env 配置文件放到这里，如果你的配置文件中包含敏感信息，请自行删除 -->
+```dotenv
+```
 
 ## 日志/截图
 <!-- 将任何有关的日志/截图放到这里（如：控制台输出) -->
