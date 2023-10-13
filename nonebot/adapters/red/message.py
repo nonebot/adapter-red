@@ -50,7 +50,9 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MessageSegment("at_all")
 
     @staticmethod
-    def image(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
+    def image(file: Union[str, Path, BytesIO, bytes]) -> "MessageSegment":
+        if isinstance(file, str):
+            file = Path(file)
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
@@ -58,7 +60,9 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MediaMessageSegment("image", {"file": file})
 
     @staticmethod
-    def file(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
+    def file(file: Union[str, Path, BytesIO, bytes]) -> "MessageSegment":
+        if isinstance(file, str):
+            file = Path(file)
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
@@ -66,7 +70,9 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MediaMessageSegment("file", {"file": file})
 
     @staticmethod
-    def voice(file: Union[Path, BytesIO, bytes], duration: int = 1) -> "MessageSegment":
+    def voice(file: Union[str, Path, BytesIO, bytes], duration: int = 1) -> "MessageSegment":
+        if isinstance(file, str):
+            file = Path(file)
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):
@@ -74,7 +80,9 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MediaMessageSegment("voice", {"file": file, "duration": duration})
 
     @staticmethod
-    def video(file: Union[Path, BytesIO, bytes]) -> "MessageSegment":
+    def video(file: Union[str, Path, BytesIO, bytes]) -> "MessageSegment":
+        if isinstance(file, str):
+            file = Path(file)
         if isinstance(file, Path):
             file = file.read_bytes()
         elif isinstance(file, BytesIO):

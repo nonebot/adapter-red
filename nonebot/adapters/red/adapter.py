@@ -64,7 +64,8 @@ class Adapter(BaseAdapter):
     async def startup(self) -> None:
         """定义启动时的操作，例如和平台建立连接"""
         if not self._bots:
-            raise RuntimeError(
+            log(
+                "WARNING",
                 "No bots found in config! \n"
                 "Please check your config file and make sure it's correct."
             )

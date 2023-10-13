@@ -480,3 +480,24 @@ class Bot(BaseBot):
             source_target=src_peer,
             elements=elems,
         )
+
+    async def send_group_forward(
+        self,
+        nodes: List[ForwardNode],
+        group: Union[int, str],
+        source_group: Optional[Union[int, str]] = None,
+    ):
+        """发送群组合并转发消息
+
+        参数:
+            nodes: 合并转发节点
+            group: 群组 id
+            source_group: 伪造的消息来源群组 id
+        """
+        await self.send_fake_forward(
+            nodes,
+            ChatType.GROUP,
+            group,
+            source_chat_type=ChatType.GROUP,
+            source_target=source_group,
+        )
