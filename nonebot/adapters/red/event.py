@@ -237,6 +237,9 @@ class GroupNameUpdateEvent(NoticeEvent):
             operatorName=obj.elements[0].grayTipElement.groupElement.memberNick,  # type: ignore  # noqa: E501
         )
 
+legacy_invite_message = re.compile(
+    r'jp="(\d+)".*jp="(\d+)"', re.DOTALL | re.MULTILINE | re.IGNORECASE
+)
 
 class MemberAddEvent(NoticeEvent):
     """群成员增加事件"""
@@ -266,10 +269,6 @@ class MemberAddEvent(NoticeEvent):
         # 获取事件会话 ID 的方法，根据事件具体实现，如果事件没有相关 ID，则抛出异常
         return f"{self.peerUin or self.peerUid}_{self.memberUid}"
 
-    legacy_invite_message = re.compile(
-        r'jp="(\d+)".*jp="(\d+)"', re.DOTALL | re.MULTILINE | re.IGNORECASE
-    )
-
     @classmethod
     @override
     def convert(cls, obj: Any):
@@ -287,7 +286,7 @@ class MemberAddEvent(NoticeEvent):
         }
         if obj.elements[0].grayTipElement.xmlElement:  # type: ignore
             if not (
-                mat := cls.legacy_invite_message.match(
+                mat := legacy_invite_message.match(
                     obj.elements[0].grayTipElement.xmlElement.content
                 )
             ):  # type: ignore  # noqa: E501
