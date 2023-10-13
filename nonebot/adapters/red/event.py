@@ -237,9 +237,11 @@ class GroupNameUpdateEvent(NoticeEvent):
             operatorName=obj.elements[0].grayTipElement.groupElement.memberNick,  # type: ignore  # noqa: E501
         )
 
+
 legacy_invite_message = re.compile(
     r'jp="(\d+)".*jp="(\d+)"', re.DOTALL | re.MULTILINE | re.IGNORECASE
 )
+
 
 class MemberAddEvent(NoticeEvent):
     """群成员增加事件"""

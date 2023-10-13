@@ -70,7 +70,9 @@ class MessageSegment(BaseMessageSegment["Message"]):
         return MediaMessageSegment("file", {"file": file})
 
     @staticmethod
-    def voice(file: Union[str, Path, BytesIO, bytes], duration: int = 1) -> "MessageSegment":
+    def voice(
+        file: Union[str, Path, BytesIO, bytes], duration: int = 1
+    ) -> "MessageSegment":
         if isinstance(file, str):
             file = Path(file)
         if isinstance(file, Path):

@@ -67,7 +67,7 @@ class Adapter(BaseAdapter):
             log(
                 "WARNING",
                 "No bots found in config! \n"
-                "Please check your config file and make sure it's correct."
+                "Please check your config file and make sure it's correct.",
             )
         for bot in self._bots:
             self.tasks.append(asyncio.create_task(self._forward_ws(bot)))
@@ -128,8 +128,10 @@ class Adapter(BaseAdapter):
                 # 尝试重连
                 log(
                     "ERROR",
-                    "<r><bg #f8bbd0>Error while setup websocket to "
-                    f"{ws_url}. Trying to reconnect...</bg #f8bbd0></r>",
+                    "<r><bg #f8bbd0>"
+                    "Error while setup websocket to "
+                    f"{escape_tag(str(ws_url))}. Trying to reconnect..."
+                    f"</bg #f8bbd0></r>",
                     e,
                 )
                 await asyncio.sleep(3)  # 重连间隔
