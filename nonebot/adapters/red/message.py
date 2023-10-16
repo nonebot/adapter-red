@@ -166,6 +166,9 @@ class MediaMessageSegment(MessageSegment):
 
     async def upload(self, bot: "Bot") -> UploadResponse:
         data = self.data["file"] if self.data.get("file") else await self.download(bot)
+        filename = f"{self.type}_{id(self)}"
+        if self.type == "voice":
+            filename += ".amr"
         resp = await bot.adapter.request(
             Request(
                 "POST",
@@ -173,7 +176,7 @@ class MediaMessageSegment(MessageSegment):
                 headers={
                     "Authorization": f"Bearer {bot.info.token}",
                 },
-                files={f"file_{self.type}": (f"file_{self.type}", data)},
+                files={f"file_{self.type}": (filename, data)},
             )
         )
         return UploadResponse.parse_raw(resp.content)
