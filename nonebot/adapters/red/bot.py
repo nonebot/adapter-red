@@ -13,8 +13,8 @@ from nonebot.adapters import MessageSegment as BaseMessageSegment
 from .utils import log
 from .config import BotInfo
 from .api.model import Group, Member
-from .event import Event, MessageEvent
 from .api.model import Message as MessageModel
+from .event import Event, NoticeEvent, MessageEvent
 from .api.model import Profile, ChatType, UploadResponse
 from .message import Message, ForwardNode, MessageSegment, MediaMessageSegment
 
@@ -129,7 +129,7 @@ def _check_nickname(bot: "Bot", event: MessageEvent) -> None:
 
 
 def get_peer_data(event: Event, **kwargs: Any) -> Tuple[int, str]:
-    if isinstance(event, MessageEvent):
+    if isinstance(event, (MessageEvent, NoticeEvent)):
         return event.chatType, event.peerUin or event.peerUid
     return kwargs["chatType"], kwargs["peerUin"]
 

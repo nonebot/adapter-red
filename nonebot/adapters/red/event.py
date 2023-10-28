@@ -288,7 +288,7 @@ class MemberAddEvent(NoticeEvent):
         }
         if obj.elements[0].grayTipElement.xmlElement:  # type: ignore
             if not (
-                mat := legacy_invite_message.match(
+                mat := legacy_invite_message.search(
                     obj.elements[0].grayTipElement.xmlElement.content
                 )
             ):  # type: ignore  # noqa: E501
