@@ -170,7 +170,15 @@ class Bot(BaseBot):
             target: 目标 id
             message: 发送的消息
         """
-        element_data = await Message(message).export(self)
+        message = Message(message)
+        if message.has("forward"):
+            forward = message["forward", 0]
+            return await self.send_fake_forward(
+                forward.data["nodes"],
+                chat_type,
+                target,
+            )
+        element_data = await message.export(self)
         resp = await self.call_api(
             "send_message",
             chat_type=chat_type,
@@ -219,7 +227,15 @@ class Bot(BaseBot):
             message: 发送的消息
         """
         chatType, peerUin = get_peer_data(event, **kwargs)
-        element_data = await Message(message).export(self)
+        message = Message(message)
+        if message.has("forward"):
+            forward = message["forward", 0]
+            return await self.send_fake_forward(
+                forward.data["nodes"],
+                ChatType(chatType),
+                peerUin,
+            )
+        element_data = message.export(self)
         resp = await self.call_api(
             "send_message",
             chat_type=chatType,
