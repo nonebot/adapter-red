@@ -486,7 +486,7 @@ class Bot(BaseBot):
         base_seq = random.randint(0, 65535)
         elems = []
         for node in nodes:
-            elems.append(await node.export(base_seq, self))
+            elems.append(await node.export(base_seq, self, int(src_peer)))
             base_seq += 1
         await self.call_api(
             "send_fake_forward",

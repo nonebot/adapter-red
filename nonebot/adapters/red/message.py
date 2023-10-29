@@ -496,11 +496,11 @@ class Message(BaseMessage[MessageSegment]):
 class ForwardNode:
     uin: str
     name: str
-    group: Union[int, str]
     message: Message
+    group: Union[int, str, None] = None
     time: datetime = field(default_factory=datetime.now)
 
-    async def export(self, seq: int, bot: "Bot") -> dict:
+    async def export(self, seq: int, bot: "Bot", group: int) -> dict:
         elems = []
         for seg in self.message:
             if seg.type == "text":
@@ -543,7 +543,7 @@ class ForwardNode:
             "head": {
                 "field2": self.uin,
                 "field8": {
-                    "field1": int(self.group),
+                    "field1": int(self.group) if self.group else group,
                     "field4": self.name,
                 },
             },
