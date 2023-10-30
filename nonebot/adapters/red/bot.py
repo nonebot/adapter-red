@@ -235,7 +235,7 @@ class Bot(BaseBot):
                 ChatType(chatType),
                 peerUin,
             )
-        element_data = message.export(self)
+        element_data = await message.export(self)
         resp = await self.call_api(
             "send_message",
             chat_type=chatType,
