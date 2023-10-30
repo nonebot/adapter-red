@@ -1,4 +1,5 @@
 from enum import IntEnum
+from datetime import datetime
 from typing import Any, List, Optional
 
 from pydantic import BaseModel
@@ -52,7 +53,7 @@ class MemberAdd(BaseModel):
 
 
 class ShutUpTarget(BaseModel):
-    uid: Optional[str]
+    uid: str = "undefined"
     card: str
     name: str
     role: int
@@ -334,10 +335,10 @@ class Message(BaseModel):
     msgType: MsgType
     subMsgType: int
     sendType: int
-    senderUid: Optional[str]
-    senderUin: Optional[str]
-    peerUid: Optional[str]
-    peerUin: Optional[str]
+    senderUid: str = "undefined"
+    senderUin: str = "-1"
+    peerUid: str = "undefined"
+    peerUin: str = "-1"
     channelId: str
     guildId: str
     guildCode: str
@@ -375,6 +376,10 @@ class Message(BaseModel):
     clientSeq: str
     nameType: Optional[int]
     avatarFlag: Optional[int]
+
+    @property
+    def time(self):
+        return datetime.fromtimestamp(int(self.msgTime))
 
 
 class Profile(BaseModel):

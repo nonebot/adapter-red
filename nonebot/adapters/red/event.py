@@ -144,6 +144,11 @@ class PrivateMessageEvent(MessageEvent):
         )
         return escape_tag(text)
 
+    @property
+    def user_id(self) -> str:
+        """好友的id"""
+        return self.peerUin or self.peerUid
+
 
 class GroupMessageEvent(MessageEvent):
     @override
@@ -158,6 +163,11 @@ class GroupMessageEvent(MessageEvent):
             f"{self.get_message()}"
         )
         return escape_tag(text)
+
+    @property
+    def group_id(self) -> str:
+        """群组的id"""
+        return self.peerUin or self.peerUid
 
 
 class NoticeEvent(Event):
@@ -286,13 +296,11 @@ class MemberAddEvent(NoticeEvent):
             "peerUid": obj.peerUid,
             "peerUin": obj.peerUin,
         }
-        if obj.elements[0].grayTipElement.xmlElement:  # type: ignore
-            if not (
-                mat := legacy_invite_message.search(
-                    obj.elements[0].grayTipElement.xmlElement.content
-                )
-            ):  # type: ignore  # noqa: E501
+        if obj.elements[0].grayTipElement and obj.elements[0].grayTipElement.xmlElement and obj.elements[0].grayTipElement.xmlElement.content:  # type: ignore  # noqa: E501
+            # fmt: off
+            if not (mat := legacy_invite_message.search(obj.elements[0].grayTipElement.xmlElement.content)):  # type: ignore  # noqa: E501
                 raise ValueError("Invalid legacy invite message.")
+            # fmt: on
             params["operatorUid"] = mat[1]
             params["memberUid"] = mat[2]
         else:

@@ -488,7 +488,7 @@ class Bot(BaseBot):
         for node in nodes:
             elems.append(await node.export(base_seq, self, int(src_peer)))
             base_seq += 1
-        await self.call_api(
+        return await self.call_api(
             "send_fake_forward",
             chat_type=chat_type,
             target=peer,
@@ -510,7 +510,7 @@ class Bot(BaseBot):
             group: 群组 id
             source_group: 伪造的消息来源群组 id
         """
-        await self.send_fake_forward(
+        return await self.send_fake_forward(
             nodes,
             ChatType.GROUP,
             group,
