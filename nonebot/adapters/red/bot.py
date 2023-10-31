@@ -442,7 +442,7 @@ class Bot(BaseBot):
         self,
         chat_type: ChatType,
         target: Union[int, str],
-        offset: int = 0,
+        offset_msg_id: str,
         count: int = 100,
     ):
         """拉取历史消息
@@ -450,7 +450,7 @@ class Bot(BaseBot):
         参数:
             chat_type: 聊天类型，分为好友与群组
             target: 目标 id
-            offset: 从最近一条消息算起，选择从第几条消息开始拉取
+            offset_msg_id: 从哪一条消息开始拉去，使用msgId
             count: 一次拉取多少消息
         """
         peer = str(target)
@@ -458,7 +458,7 @@ class Bot(BaseBot):
             "get_history_messages",
             chat_type=chat_type,
             target=peer,
-            offset=offset,
+            offset_msg_id=offset_msg_id,
             count=count,
         )
 
