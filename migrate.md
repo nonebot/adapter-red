@@ -135,6 +135,11 @@ async def _handle_v12(bot: Bot, event: Union[V12MessageEvent, V11MessageEvent]):
 
 ```python
 @property
+def time(self):
+    """消息发送时间"""
+    return datetime.fromtimestamp(int(self.msgTime))
+
+@property
 def scene(self) -> str:
     """群组或好友的id"""
     return self.peerUin or self.peerUid
@@ -148,6 +153,16 @@ def is_group(self) -> bool:
 def is_private(self) -> bool:
     """是否为私聊消息"""
     return self.chatType == ChatType.FRIEND
+
+@property
+def user_id(self) -> str:
+    """好友的id"""
+    return self.peerUin or self.peerUid
+
+@property
+def group_id(self) -> str:
+    """群组的id"""
+    return self.peerUin or self.peerUid
 ```
 
 ### 消息内容
