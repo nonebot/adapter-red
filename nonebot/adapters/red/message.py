@@ -174,7 +174,7 @@ class MediaMessageSegment(MessageSegment):
                 files={f"file_{self.type}": (filename, data)},
             )
         )
-        return UploadResponse.parse_raw(resp.content)
+        return UploadResponse.parse_raw(resp.content)  # type: ignore
 
 
 class Message(BaseMessage[MessageSegment]):
@@ -204,11 +204,9 @@ class Message(BaseMessage[MessageSegment]):
                 elif text.atType == 1:
                     msg.append(MessageSegment.at_all())
                 elif text.atType == 2:
-                    msg.append(
-                        MessageSegment.at(
-                            text.atNtUin or text.atNtUid, text.content[1:]
-                        )
-                    )  # type: ignore  # noqa: E501
+                    # fmt: off
+                    msg.append(MessageSegment.at(text.atNtUin or text.atNtUid, text.content[1:]))  # type: ignore  # noqa: E501
+                    # fmt: on
             if element.elementType == 2:
                 if TYPE_CHECKING:
                     assert element.picElement

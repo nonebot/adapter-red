@@ -331,6 +331,7 @@ class MemberMuteEvent(NoticeEvent):
     @override
     def convert(cls, obj: Any):
         assert isinstance(obj, MessageModel)
+        # fmt: off
         params = {
             "msgId": obj.msgId,
             "msgRandom": obj.msgRandom,
@@ -342,16 +343,15 @@ class MemberMuteEvent(NoticeEvent):
             "peerUid": obj.peerUid,
             "peerUin": obj.peerUin,
             "start": datetime.fromtimestamp(
-                obj.elements[0].grayTipElement.groupElement.shutUp.curTime
+                obj.elements[0].grayTipElement.groupElement.shutUp.curTime  # type: ignore  # noqa: E501
             ),
-            # type: ignore  # noqa: E501
             "duration": timedelta(
-                seconds=obj.elements[0].grayTipElement.groupElement.shutUp.duration
+                seconds=obj.elements[0].grayTipElement.groupElement.shutUp.duration  # type: ignore  # noqa: E501
             ),
-            # type: ignore  # noqa: E501
             "operator": obj.elements[0].grayTipElement.groupElement.shutUp.admin,  # type: ignore  # noqa: E501
-            "member": obj.elements[0].grayTipElement.groupElement.shutUp.member,  # type: ignore  # noqa: E501
+            "member": obj.elements[0].grayTipElement.groupElement.shutUp.member, # type: ignore  # noqa: E501
         }
+        # fmt: on
         if params["duration"].total_seconds() < 1:
             return MemberUnmuteEvent(**params)
         return MemberMutedEvent(**params)
