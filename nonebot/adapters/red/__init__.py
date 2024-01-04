@@ -1,3 +1,4 @@
+from .permission import *
 from .bot import Bot as Bot
 from .adapter import Adapter as Adapter
 from .message import Message as Message
@@ -6,4 +7,4 @@ from .message import MessageSegment as MessageSegment
 from .event import GroupMessageEvent as GroupMessageEvent
 from .event import PrivateMessageEvent as PrivateMessageEvent
 
-__version__ = "0.7.4"
+__version__ = "0.8.0"
