@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Dict, List
 
 from yarl import URL
-from pydantic import Extra, Field, BaseModel
+from pydantic import Field, BaseModel
+from nonebot.compat import type_validate_python
 
 
 class BotInfo(BaseModel):
@@ -24,16 +25,16 @@ class Server(BaseModel):
     host: str = Field(default="localhost", alias="listen")
 
 
-class Servers(BaseModel, extra=Extra.ignore):
+class Servers(BaseModel):
     servers: List[Server] = Field(default_factory=list)
     enable: bool = True
 
 
-class ChronocatConfig(Servers, extra=Extra.ignore):
+class ChronocatConfig(Servers):
     overrides: Dict[str, Servers] = Field(default_factory=dict)
 
 
-class Config(BaseModel, extra=Extra.ignore):
+class Config(BaseModel):
     red_bots: List[BotInfo] = Field(default_factory=list)
     """bot 配置"""
 
@@ -53,7 +54,7 @@ def get_config() -> List[BotInfo]:
     if not config.exists():
         return []
     with open(config, encoding="utf-8") as f:
-        chrono_config = ChronocatConfig.parse_obj(yaml.safe_load(f))
+        chrono_config = type_validate_python(ChronocatConfig, yaml.safe_load(f))
     base_config = next(
         (s for s in chrono_config.servers if s.type == "red" and s.enable), None
     )

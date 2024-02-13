@@ -5,11 +5,12 @@ from typing_extensions import override
 from datetime import datetime, timedelta
 
 from nonebot.utils import escape_tag
-from pydantic.class_validators import root_validator
+from nonebot.compat import model_dump, type_validate_python
 
 from nonebot.adapters import Event as BaseEvent
 
 from .message import Message
+from .compat import model_validator
 from .api.model import Message as MessageModel
 from .api.model import MsgType, ChatType, ReplyElement, ShutUpTarget
 
@@ -27,7 +28,7 @@ class Event(BaseEvent):
 
     @override
     def get_event_description(self) -> str:
-        return escape_tag(str(self.dict()))
+        return escape_tag(str(model_dump(self)))
 
     @override
     def get_message(self):
@@ -51,7 +52,7 @@ class Event(BaseEvent):
 
         子类可根据需要重写此方法
         """
-        return cls.parse_obj(obj)
+        return type_validate_python(cls, obj)
 
 
 class MessageEvent(Event, MessageModel):
@@ -85,7 +86,7 @@ class MessageEvent(Event, MessageModel):
     def get_message(self) -> Message:
         return self.message
 
-    @root_validator(pre=True, allow_reuse=True)
+    @model_validator(mode="before")
     def check_message(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         if "elements" in values:
             values["message"] = Message.from_red_message(
@@ -296,7 +297,11 @@ class MemberAddEvent(NoticeEvent):
             "peerUid": obj.peerUid,
             "peerUin": obj.peerUin,
         }
-        if obj.elements[0].grayTipElement and obj.elements[0].grayTipElement.xmlElement and obj.elements[0].grayTipElement.xmlElement.content:  # type: ignore  # noqa: E501
+        if (
+            obj.elements[0].grayTipElement
+            and obj.elements[0].grayTipElement.xmlElement
+            and obj.elements[0].grayTipElement.xmlElement.content
+        ):  # type: ignore  # noqa: E501
             # fmt: off
             if not (mat := legacy_invite_message.search(obj.elements[0].grayTipElement.xmlElement.content)):  # type: ignore  # noqa: E501
                 raise ValueError("Invalid legacy invite message.")
@@ -306,7 +311,9 @@ class MemberAddEvent(NoticeEvent):
         else:
             params["memberUid"] = obj.elements[0].grayTipElement.groupElement.memberUin  # type: ignore  # noqa: E501
             params["operatorUid"] = obj.elements[0].grayTipElement.groupElement.adminUin  # type: ignore  # noqa: E501
-            params["memberName"] = obj.elements[0].grayTipElement.groupElement.memberNick  # type: ignore  # noqa: E501
+            params["memberName"] = obj.elements[
+                0
+            ].grayTipElement.groupElement.memberNick  # type: ignore  # noqa: E501
         return cls(**params)
 
 

@@ -5,9 +5,11 @@ from typing import Any, List, Type, Union, Optional
 
 from nonebot.utils import escape_tag
 from pydantic import ValidationError
+from nonebot.compat import type_validate_python
 from nonebot.drivers import Driver, Request, WebSocket, ForwardDriver
 from nonebot.exception import ActionFailed, NetworkError, WebSocketClosed
 
+from nonebot import get_plugin_config
 from nonebot.adapters import Adapter as BaseAdapter
 
 from .bot import Bot
@@ -31,7 +33,7 @@ class Adapter(BaseAdapter):
     def __init__(self, driver: Driver, **kwargs: Any):
         super().__init__(driver, **kwargs)
         # 读取适配器所需的配置项
-        self.red_config: Config = Config.parse_obj(self.config)
+        self.red_config: Config = get_plugin_config(Config)
         self._bots = self.red_config.red_bots
         if self.red_config.red_auto_detect and not self._bots:
             try:
@@ -159,7 +161,7 @@ class Adapter(BaseAdapter):
 
             def _handle_message(message: dict):
                 try:
-                    _data = MessageModel.parse_obj(message)
+                    _data = type_validate_python(MessageModel, message)
                 except ValidationError as e:
                     log(
                         "WARNING",
