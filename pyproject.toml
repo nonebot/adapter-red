@@ -6,7 +6,7 @@ authors = [
     {name = "RF-Tar-Railt", email = "rf_tar_railt@qq.com"},
 ]
 dependencies = [
-    "nonebot2>=2.0.1",
+    "nonebot2>=2.2.0",
     "packaging>=23.1",
 ]
 requires-python = ">=3.8"
@@ -31,7 +31,7 @@ dev = [
     "black>=23.7.0",
     "ruff>=0.0.280",
     "pre-commit>=3.3.3",
-    "nonebot2[httpx,websockets]>=2.0.1",
+    "nonebot2[httpx,websockets]>=2.2.0",
     "PyYAML>=6.0.1",
 ]
 [tool.pdm.build]

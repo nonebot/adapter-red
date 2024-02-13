@@ -5,6 +5,7 @@ from typing_extensions import override
 from typing import Any, List, Tuple, Union, Optional
 
 from nonebot.message import handle_event
+from nonebot.compat import type_validate_python
 
 from nonebot.adapters import Bot as BaseBot
 from nonebot.adapters import Adapter as BaseAdapter
@@ -185,7 +186,7 @@ class Bot(BaseBot):
             target=str(target),
             elements=element_data,
         )
-        return MessageModel.parse_obj(resp)
+        return type_validate_python(MessageModel, resp)
 
     async def send_friend_message(
         self,
@@ -242,22 +243,22 @@ class Bot(BaseBot):
             target=peerUin,
             elements=element_data,
         )
-        return MessageModel.parse_obj(resp)
+        return type_validate_python(MessageModel, resp)
 
     async def get_self_profile(self) -> Profile:
         """获取登录账号自己的资料"""
         resp = await self.call_api("get_self_profile")
-        return Profile.parse_obj(resp)
+        return type_validate_python(Profile, resp)
 
     async def get_friends(self) -> List[Profile]:
         """获取登录账号所有好友的资料"""
         resp = await self.call_api("get_friends")
-        return [Profile.parse_obj(data) for data in resp]
+        return [type_validate_python(Profile, data) for data in resp]
 
     async def get_groups(self) -> List[Group]:
         """获取登录账号所有群组的资料"""
         resp = await self.call_api("get_groups")
-        return [Group.parse_obj(data) for data in resp]
+        return [type_validate_python(Group, data) for data in resp]
 
     async def mute_member(
         self, group: int, *members: int, duration: Union[int, timedelta] = 60
@@ -342,7 +343,7 @@ class Bot(BaseBot):
             size: 拉取多少个成员资料
         """
         resp = await self.call_api("get_members", group=group, size=size)
-        return [Member.parse_obj(data["detail"]) for data in resp]
+        return [type_validate_python(Member, data["detail"]) for data in resp]
 
     async def fetch(self, ms: BaseMessageSegment):
         """获取媒体消息段的二进制数据
@@ -397,7 +398,9 @@ class Bot(BaseBot):
             file: 上传的资源数据
         """
         log("WARING", "This API is not suggest for user usage")
-        return UploadResponse.parse_obj(await self.call_api("upload", file=file))
+        return type_validate_python(
+            UploadResponse, await self.call_api("upload", file=file)
+        )
 
     async def recall_message(
         self,
