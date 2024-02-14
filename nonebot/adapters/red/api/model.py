@@ -36,20 +36,20 @@ class EmojiZplan(BaseModel):
 
 
 class OtherAdd(BaseModel):
-    uid: Optional[str]
-    name: Optional[str]
-    uin: Optional[str]
+    uid: Optional[str] = None
+    name: Optional[str] = None
+    uin: Optional[str] = None
 
 
 class MemberAdd(BaseModel):
     showType: int
-    otherAdd: Optional[OtherAdd]
-    otherAddByOtherQRCode: Optional[Any]
-    otherAddByYourQRCode: Optional[Any]
-    youAddByOtherQRCode: Optional[Any]
-    otherInviteOther: Optional[Any]
-    otherInviteYou: Optional[Any]
-    youInviteOther: Optional[Any]
+    otherAdd: Optional[OtherAdd] = None
+    otherAddByOtherQRCode: Optional[Any] = None
+    otherAddByYourQRCode: Optional[Any] = None
+    youAddByOtherQRCode: Optional[Any] = None
+    otherInviteOther: Optional[Any] = None
+    otherInviteYou: Optional[Any] = None
+    youInviteOther: Optional[Any] = None
 
 
 class ShutUpTarget(BaseModel):
@@ -70,96 +70,96 @@ class ShutUp(BaseModel):
 class GroupElement(BaseModel):
     type: int
     role: int
-    groupName: Optional[str]
-    memberUid: Optional[str]
-    memberNick: Optional[str]
-    memberRemark: Optional[str]
-    adminUid: Optional[str]
-    adminNick: Optional[str]
-    adminRemark: Optional[str]
-    createGroup: Optional[Any]
-    memberAdd: Optional[MemberAdd]
-    shutUp: Optional[ShutUp]
-    memberUin: Optional[str]
-    adminUin: Optional[str]
+    groupName: Optional[str] = None
+    memberUid: Optional[str] = None
+    memberNick: Optional[str] = None
+    memberRemark: Optional[str] = None
+    adminUid: Optional[str] = None
+    adminNick: Optional[str] = None
+    adminRemark: Optional[str] = None
+    createGroup: Optional[Any] = None
+    memberAdd: Optional[MemberAdd] = None
+    shutUp: Optional[ShutUp] = None
+    memberUin: Optional[str] = None
+    adminUin: Optional[str] = None
 
 
 class XmlElement(BaseModel):
-    busiType: Optional[str]
-    busiId: Optional[str]
+    busiType: Optional[str] = None
+    busiId: Optional[str] = None
     c2cType: int
     serviceType: int
     ctrlFlag: int
-    content: Optional[str]
-    templId: Optional[str]
-    seqId: Optional[str]
-    templParam: Optional[Any]
-    pbReserv: Optional[str]
-    members: Optional[Any]
+    content: Optional[str] = None
+    templId: Optional[str] = None
+    seqId: Optional[str] = None
+    templParam: Optional[Any] = None
+    pbReserv: Optional[str] = None
+    members: Optional[Any] = None
 
 
 class TextElement(BaseModel):
     content: str
-    atType: Optional[int]
-    atUid: Optional[str]
-    atTinyId: Optional[str]
-    atNtUid: Optional[str]
-    atNtUin: Optional[str]
-    subElementType: Optional[int]
-    atChannelId: Optional[str]
-    atRoleId: Optional[str]
-    atRoleColor: Optional[str]
-    atRoleName: Optional[str]
-    needNotify: Optional[str]
+    atType: Optional[int] = None
+    atUid: Optional[str] = None
+    atTinyId: Optional[str] = None
+    atNtUid: Optional[str] = None
+    atNtUin: Optional[str] = None
+    subElementType: Optional[int] = None
+    atChannelId: Optional[str] = None
+    atRoleId: Optional[str] = None
+    atRoleColor: Optional[str] = None
+    atRoleName: Optional[str] = None
+    needNotify: Optional[str] = None
 
 
 class PicElement(BaseModel):
-    picSubType: Optional[int]
+    picSubType: Optional[int] = None
     fileName: str
     fileSize: str
-    picWidth: Optional[int]
-    picHeight: Optional[int]
-    original: Optional[bool]
+    picWidth: Optional[int] = None
+    picHeight: Optional[int] = None
+    original: Optional[bool] = None
     md5HexStr: str
     sourcePath: str
-    thumbPath: Optional[Any]
-    transferStatus: Optional[int]
-    progress: Optional[int]
-    picType: Optional[int]
-    invalidState: Optional[int]
-    fileUuid: Optional[str]
-    fileSubId: Optional[str]
-    thumbFileSize: Optional[int]
-    summary: Optional[str]
-    emojiAd: Optional[EmojiAd]
-    emojiMall: Optional[EmojiMall]
-    emojiZplan: Optional[EmojiZplan]
+    thumbPath: Optional[Any] = None
+    transferStatus: Optional[int] = None
+    progress: Optional[int] = None
+    picType: Optional[int] = None
+    invalidState: Optional[int] = None
+    fileUuid: Optional[str] = None
+    fileSubId: Optional[str] = None
+    thumbFileSize: Optional[int] = None
+    summary: Optional[str] = None
+    emojiAd: Optional[EmojiAd] = None
+    emojiMall: Optional[EmojiMall] = None
+    emojiZplan: Optional[EmojiZplan] = None
 
 
 class FaceElement(BaseModel):
     faceIndex: int
-    faceText: Optional[str]
+    faceText: Optional[str] = None
     """{None: normal, '/xxx': sticker, '': poke}"""
     faceType: int
     """{1: normal, 2: normal-extended, 3: sticker, 5: poke}"""
-    packId: Optional[Any]
-    stickerId: Optional[Any]
-    sourceType: Optional[Any]
-    stickerType: Optional[Any]
-    resultId: Optional[Any]
-    surpriseId: Optional[Any]
-    randomType: Optional[Any]
-    imageType: Optional[Any]
-    pokeType: Optional[Any]
-    spokeSummary: Optional[Any]
-    doubleHit: Optional[Any]
-    vaspokeId: Optional[Any]
-    vaspokeName: Optional[Any]
-    vaspokeMinver: Optional[Any]
-    pokeStrength: Optional[Any]
-    msgType: Optional[Any]
-    faceBubbleCount: Optional[Any]
-    pokeFlag: Optional[Any]
+    packId: Optional[Any] = None
+    stickerId: Optional[Any] = None
+    sourceType: Optional[Any] = None
+    stickerType: Optional[Any] = None
+    resultId: Optional[Any] = None
+    surpriseId: Optional[Any] = None
+    randomType: Optional[Any] = None
+    imageType: Optional[Any] = None
+    pokeType: Optional[Any] = None
+    spokeSummary: Optional[Any] = None
+    doubleHit: Optional[Any] = None
+    vaspokeId: Optional[Any] = None
+    vaspokeName: Optional[Any] = None
+    vaspokeMinver: Optional[Any] = None
+    pokeStrength: Optional[Any] = None
+    msgType: Optional[Any] = None
+    faceBubbleCount: Optional[Any] = None
+    pokeFlag: Optional[Any] = None
 
 
 class FileElement(BaseModel):
@@ -167,25 +167,25 @@ class FileElement(BaseModel):
     fileName: str
     filePath: str
     fileSize: str
-    picHeight: Optional[int]
-    picWidth: Optional[int]
-    picThumbPath: Optional[Any]
-    expireTime: Optional[str]
-    file10MMd5: Optional[str]
-    fileSha: Optional[str]
-    fileSha3: Optional[str]
-    videoDuration: Optional[int]
-    transferStatus: Optional[int]
-    progress: Optional[int]
-    invalidState: Optional[int]
-    fileUuid: Optional[str]
-    fileSubId: Optional[str]
-    thumbFileSize: Optional[int]
-    fileBizId: Optional[Any]
-    thumbMd5: Optional[Any]
-    folderId: Optional[Any]
-    fileGroupIndex: Optional[int]
-    fileTransType: Optional[Any]
+    picHeight: Optional[int] = None
+    picWidth: Optional[int] = None
+    picThumbPath: Optional[Any] = None
+    expireTime: Optional[str] = None
+    file10MMd5: Optional[str] = None
+    fileSha: Optional[str] = None
+    fileSha3: Optional[str] = None
+    videoDuration: Optional[int] = None
+    transferStatus: Optional[int] = None
+    progress: Optional[int] = None
+    invalidState: Optional[int] = None
+    fileUuid: Optional[str] = None
+    fileSubId: Optional[str] = None
+    thumbFileSize: Optional[int] = None
+    fileBizId: Optional[Any] = None
+    thumbMd5: Optional[Any] = None
+    folderId: Optional[Any] = None
+    fileGroupIndex: Optional[int] = None
+    fileTransType: Optional[Any] = None
 
 
 class PttElement(BaseModel):
@@ -200,15 +200,15 @@ class PttElement(BaseModel):
     canConvert2Text: bool
     fileId: int
     fileUuid: str
-    text: Optional[str]
-    translateStatus: Optional[int]
-    transferStatus: Optional[int]
-    progress: Optional[int]
-    playState: Optional[int]
-    waveAmplitudes: Optional[List[int]]
-    invalidState: Optional[int]
-    fileSubId: Optional[str]
-    fileBizId: Optional[Any]
+    text: Optional[str] = None
+    translateStatus: Optional[int] = None
+    transferStatus: Optional[int] = None
+    progress: Optional[int] = None
+    playState: Optional[int] = None
+    waveAmplitudes: Optional[List[int]] = None
+    invalidState: Optional[int] = None
+    fileSubId: Optional[str] = None
+    fileBizId: Optional[Any] = None
 
 
 class VideoElement(BaseModel):
@@ -224,24 +224,24 @@ class VideoElement(BaseModel):
     thumbHeight: int
     busiType: int
     subBusiType: int
-    thumbPath: Optional[Any]
-    transferStatus: Optional[int]
-    progress: Optional[int]
-    invalidState: Optional[int]
-    fileUuid: Optional[str]
-    fileSubId: Optional[str]
-    fileBizId: Optional[Any]
+    thumbPath: Optional[Any] = None
+    transferStatus: Optional[int] = None
+    progress: Optional[int] = None
+    invalidState: Optional[int] = None
+    fileUuid: Optional[str] = None
+    fileSubId: Optional[str] = None
+    fileBizId: Optional[Any] = None
 
 
 class ReplyElement(BaseModel):
-    replayMsgId: Optional[str]
+    replayMsgId: Optional[str] = None
     replayMsgSeq: str
-    replyMsgTime: Optional[str]
+    replyMsgTime: Optional[str] = None
     sourceMsgIdInRecords: str
-    sourceMsgTextElems: Optional[Any]
-    senderUid: Optional[str]
-    senderUidStr: Optional[str]
-    senderUin: Optional[str]
+    sourceMsgTextElems: Optional[Any] = None
+    senderUid: Optional[str] = None
+    senderUidStr: Optional[str] = None
+    senderUin: Optional[str] = None
 
 
 class ArkElement(BaseModel):
@@ -268,49 +268,49 @@ class MultiForwardMsgElement(BaseModel):
 
 
 class GrayTipElement(BaseModel):
-    subElementType: Optional[int]
-    revokeElement: Optional[dict]
-    proclamationElement: Optional[dict]
-    emojiReplyElement: Optional[dict]
-    groupElement: Optional[GroupElement]
-    buddyElement: Optional[dict]
-    feedMsgElement: Optional[dict]
-    essenceElement: Optional[dict]
-    groupNotifyElement: Optional[dict]
-    buddyNotifyElement: Optional[dict]
-    xmlElement: Optional[XmlElement]
-    fileReceiptElement: Optional[dict]
-    localGrayTipElement: Optional[dict]
-    blockGrayTipElement: Optional[dict]
-    aioOpGrayTipElement: Optional[dict]
-    jsonGrayTipElement: Optional[dict]
+    subElementType: Optional[int] = None
+    revokeElement: Optional[dict] = None
+    proclamationElement: Optional[dict] = None
+    emojiReplyElement: Optional[dict] = None
+    groupElement: Optional[GroupElement] = None
+    buddyElement: Optional[dict] = None
+    feedMsgElement: Optional[dict] = None
+    essenceElement: Optional[dict] = None
+    groupNotifyElement: Optional[dict] = None
+    buddyNotifyElement: Optional[dict] = None
+    xmlElement: Optional[XmlElement] = None
+    fileReceiptElement: Optional[dict] = None
+    localGrayTipElement: Optional[dict] = None
+    blockGrayTipElement: Optional[dict] = None
+    aioOpGrayTipElement: Optional[dict] = None
+    jsonGrayTipElement: Optional[dict] = None
 
 
 class Element(BaseModel):
     elementType: int
-    elementId: Optional[str]
-    extBufForUI: Optional[str]
-    picElement: Optional[PicElement]
-    textElement: Optional[TextElement]
-    arkElement: Optional[ArkElement]
-    avRecordElement: Optional[dict]
-    calendarElement: Optional[dict]
-    faceElement: Optional[FaceElement]
-    fileElement: Optional[FileElement]
-    giphyElement: Optional[dict]
-    grayTipElement: Optional[GrayTipElement]
-    inlineKeyboardElement: Optional[dict]
-    liveGiftElement: Optional[dict]
-    markdownElement: Optional[dict]
-    marketFaceElement: Optional[MarketFaceElement]
-    multiForwardMsgElement: Optional[MultiForwardMsgElement]
-    pttElement: Optional[PttElement]
-    replyElement: Optional[ReplyElement]
-    structLongMsgElement: Optional[dict]
-    textGiftElement: Optional[dict]
-    videoElement: Optional[VideoElement]
-    walletElement: Optional[dict]
-    yoloGameResultElement: Optional[dict]
+    elementId: Optional[str] = None
+    extBufForUI: Optional[str] = None
+    picElement: Optional[PicElement] = None
+    textElement: Optional[TextElement] = None
+    arkElement: Optional[ArkElement] = None
+    avRecordElement: Optional[dict] = None
+    calendarElement: Optional[dict] = None
+    faceElement: Optional[FaceElement] = None
+    fileElement: Optional[FileElement] = None
+    giphyElement: Optional[dict] = None
+    grayTipElement: Optional[GrayTipElement] = None
+    inlineKeyboardElement: Optional[dict] = None
+    liveGiftElement: Optional[dict] = None
+    markdownElement: Optional[dict] = None
+    marketFaceElement: Optional[MarketFaceElement] = None
+    multiForwardMsgElement: Optional[MultiForwardMsgElement] = None
+    pttElement: Optional[PttElement] = None
+    replyElement: Optional[ReplyElement] = None
+    structLongMsgElement: Optional[dict] = None
+    textGiftElement: Optional[dict] = None
+    videoElement: Optional[VideoElement] = None
+    walletElement: Optional[dict] = None
+    yoloGameResultElement: Optional[dict] = None
 
 
 class MsgType(IntEnum):
@@ -360,13 +360,13 @@ class Message(BaseModel):
     peerName: str
     editable: bool
     avatarMeta: str
-    avatarPendant: Optional[str]
-    feedId: Optional[str]
+    avatarPendant: Optional[str] = None
+    feedId: Optional[str] = None
     roleId: str
     timeStamp: str
     isImportMsg: bool
     atType: int
-    roleType: Optional[int]
+    roleType: Optional[int] = None
     fromChannelRoleInfo: RoleInfo
     fromGuildRoleInfo: RoleInfo
     levelRoleInfo: RoleInfo
@@ -374,8 +374,8 @@ class Message(BaseModel):
     isOnlineMsg: bool
     generalFlags: str
     clientSeq: str
-    nameType: Optional[int]
-    avatarFlag: Optional[int]
+    nameType: Optional[int] = None
+    avatarFlag: Optional[int] = None
 
     @property
     def time(self):
@@ -401,15 +401,15 @@ class Profile(BaseModel):
     isSpecialCareZone: bool
     ringId: str
     status: int
-    extStatus: Optional[int]
+    extStatus: Optional[int] = None
     categoryId: int
     onlyChat: bool
     qzoneNotWatch: bool
     qzoneNotWatched: bool
-    vipFlag: Optional[bool]
-    yearVipFlag: Optional[bool]
-    svipFlag: Optional[bool]
-    vipLevel: Optional[int]
+    vipFlag: Optional[bool] = None
+    yearVipFlag: Optional[bool] = None
+    svipFlag: Optional[bool] = None
+    vipLevel: Optional[int] = None
 
 
 class Member(BaseModel):
@@ -452,15 +452,15 @@ class Group(BaseModel):
 class ImageInfo(BaseModel):
     width: int
     height: int
-    type: Optional[str]
-    mime: Optional[str]
-    wUnits: Optional[str]
-    hUnits: Optional[str]
+    type: Optional[str] = None
+    mime: Optional[str] = None
+    wUnits: Optional[str] = None
+    hUnits: Optional[str] = None
 
 
 class UploadResponse(BaseModel):
     md5: str
-    imageInfo: Optional[ImageInfo]
+    imageInfo: Optional[ImageInfo] = None
     fileSize: int
     filePath: str
     ntFilePath: str
