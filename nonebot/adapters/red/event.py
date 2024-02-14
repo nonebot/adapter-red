@@ -180,7 +180,7 @@ class NoticeEvent(Event):
     msgType: MsgType
     subMsgType: int
     peerUid: str
-    peerUin: Optional[str]
+    peerUin: Optional[str] = None
 
     @override
     def get_type(self) -> str:
@@ -259,7 +259,7 @@ class MemberAddEvent(NoticeEvent):
 
     memberUid: str
     operatorUid: str
-    memberName: Optional[str]
+    memberName: Optional[str] = None
 
     @override
     def get_event_name(self) -> str:
